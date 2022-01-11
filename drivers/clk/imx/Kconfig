@@ -120,6 +120,13 @@ config CLK_IMXRT1020
 	help
 	    Build the driver for i.MXRT1020 CCM Clock Driver
 
+config CLK_IMXRT1050
+	tristate "IMXRT1050 CCM Clock Driver"
+	depends on SOC_IMXRT
+	select MXC_CLK
+	help
+	    Build the driver for i.MXRT1050 CCM Clock Driver
+
 config CLK_IMXRT1170
 	tristate "IMXRT1170 CCM Clock Driver"
 	depends on SOC_IMXRT || COMPILE_TEST
