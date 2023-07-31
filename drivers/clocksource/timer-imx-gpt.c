@@ -57,7 +57,7 @@
 #define V2_TCN			0x24
 #define V2_TCMP			0x10
 
-#define V2_TIMER_RATE_OSC_DIV8	3000000
+#define V2_TIMER_RATE_OSC_DIV8(type)	(type == GPT_TYPE_IMXRT1170 ? 2000000 : 3000000)
 
 struct imx_timer {
 	enum imx_gpt_type type;
@@ -303,7 +303,7 @@ static void imx31_gpt_setup_tctl(struct imx_timer *imxtm)
 	u32 tctl_val;
 
 	tctl_val = V2_TCTL_FRR | V2_TCTL_WAITEN | MXC_TCTL_TEN;
-	if (clk_get_rate(imxtm->clk_per) == V2_TIMER_RATE_OSC_DIV8)
+	if (clk_get_rate(imxtm->clk_per) == V2_TIMER_RATE_OSC_DIV8(imxtm->type))
 		tctl_val |= V2_TCTL_CLK_OSC_DIV8;
 	else
 		tctl_val |= V2_TCTL_CLK_PER;
@@ -316,9 +316,9 @@ static void imx6dl_gpt_setup_tctl(struct imx_timer *imxtm)
 	u32 tctl_val;
 
 	tctl_val = V2_TCTL_FRR | V2_TCTL_WAITEN | MXC_TCTL_TEN;
-	if (clk_get_rate(imxtm->clk_per) == V2_TIMER_RATE_OSC_DIV8) {
+	if (clk_get_rate(imxtm->clk_per) == V2_TIMER_RATE_OSC_DIV8(imxtm->type)) {
 		tctl_val |= V2_TCTL_CLK_OSC_DIV8;
-		/* 24 / 8 = 3 MHz */
+		/* 24 / 8 = 3 MHz or 16 / 8 = 2 MHz is case of imxrt1170 */
 		writel_relaxed(7 << V2_TPRER_PRE24M, imxtm->base + MXC_TPRER);
 		tctl_val |= V2_TCTL_24MEN;
 	} else {
@@ -386,6 +386,7 @@ static int __init _mxc_timer_init(struct imx_timer *imxtm)
 	case GPT_TYPE_IMX31:
 		imxtm->gpt = &imx31_gpt_data;
 		break;
+	case GPT_TYPE_IMXRT1170:
 	case GPT_TYPE_IMX6DL:
 		imxtm->gpt = &imx6dl_gpt_data;
 		break;
@@ -518,6 +519,11 @@ static int __init imx6dl_timer_init_dt(struct device_node *np)
 	return mxc_timer_init_dt(np, GPT_TYPE_IMX6DL);
 }
 
+static int __init imxrt1170_timer_init_dt(struct device_node *np)
+{
+	return mxc_timer_init_dt(np, GPT_TYPE_IMXRT1170);
+}
+
 TIMER_OF_DECLARE(imx1_timer, "fsl,imx1-gpt", imx1_timer_init_dt);
 TIMER_OF_DECLARE(imx21_timer, "fsl,imx21-gpt", imx21_timer_init_dt);
 TIMER_OF_DECLARE(imx27_timer, "fsl,imx27-gpt", imx21_timer_init_dt);
@@ -530,3 +536,4 @@ TIMER_OF_DECLARE(imx6q_timer, "fsl,imx6q-gpt", imx31_timer_init_dt);
 TIMER_OF_DECLARE(imx6dl_timer, "fsl,imx6dl-gpt", imx6dl_timer_init_dt);
 TIMER_OF_DECLARE(imx6sl_timer, "fsl,imx6sl-gpt", imx6dl_timer_init_dt);
 TIMER_OF_DECLARE(imx6sx_timer, "fsl,imx6sx-gpt", imx6dl_timer_init_dt);
+TIMER_OF_DECLARE(imxrt1170_timer, "fsl,imxrt1170-gpt", imxrt1170_timer_init_dt);

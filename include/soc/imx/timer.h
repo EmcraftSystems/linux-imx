@@ -11,6 +11,7 @@ enum imx_gpt_type {
 	GPT_TYPE_IMX21,		/* i.MX21/27 */
 	GPT_TYPE_IMX31,		/* i.MX31/35/25/37/51/6Q */
 	GPT_TYPE_IMX6DL,	/* i.MX6DL/SX/SL */
+	GPT_TYPE_IMXRT1170,	/* i.MXRT1170 */
 };
 
 /*
