@@ -55,5 +55,5 @@ obj-$(CONFIG_CLK_IMX7D)  += clk-imx7d.o
 obj-$(CONFIG_CLK_IMX7ULP) += clk-imx7ulp.o
 obj-$(CONFIG_CLK_IMXRT1020) += clk-imxrt1020.o
 obj-$(CONFIG_CLK_IMXRT1050)  += clk-imxrt1050.o
-obj-$(CONFIG_CLK_IMXRT1170) += clk-pllarm-imxrt1170.o clk-imxrt1170.o
+obj-$(CONFIG_CLK_IMXRT1170) += clk-pll-imxrt1170.o clk-imxrt1170.o
 obj-$(CONFIG_CLK_VF610)  += clk-vf610.o
