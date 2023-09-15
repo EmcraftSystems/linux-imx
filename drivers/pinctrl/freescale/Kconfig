@@ -180,6 +180,13 @@ config PINCTRL_IMXRT1020
        help
          Say Y here to enable the imxrt1020 pinctrl driver
 
+config PINCTRL_IMXRT1050
+	bool "IMXRT1050 pinctrl driver"
+	depends on ARCH_MXC
+	select PINCTRL_IMX
+	help
+	  Say Y here to enable the imxrt1050 pinctrl driver
+
 config PINCTRL_IMXRT1170
 	bool "IMXRT1170 pinctrl driver"
 	depends on ARCH_MXC
