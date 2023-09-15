@@ -9,6 +9,7 @@
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
 #include <linux/platform_device.h>
+#include <linux/module.h>
 #include <dt-bindings/clock/imxrt1050-clock.h>
 
 #include "clk.h"
