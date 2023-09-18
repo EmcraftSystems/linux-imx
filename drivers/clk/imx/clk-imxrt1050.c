@@ -146,6 +146,11 @@ static int imxrt1050_clocks_probe(struct platform_device *pdev)
 								    pll_base + 0xe0, 0, 2, 0, clk_enet_ref_table,
 								    &imx_ccm_lock);
 
+	hws[IMXRT1050_CLK_PLL6_ENET] = imx_clk_hw_gate("pll6_enet", "pll6", pll_base + 0xe0, 13);
+	hws[IMXRT1050_CLK_ENET_REF] = clk_hw_register_divider_table(NULL, "enet_ref", "pll6_enet", 0,
+								    pll_base + 0xe0, 0, 2, 0, clk_enet_ref_table,
+								    &imx_ccm_lock);
+
 	/* CCM clocks */
 	ccm_base = devm_platform_ioremap_resource(pdev, 0);
 	if (WARN_ON(IS_ERR(ccm_base)))
