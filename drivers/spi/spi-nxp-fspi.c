@@ -5,6 +5,7 @@
  *
  * Copyright 2019-2020 NXP
  * Copyright 2020 Puresoftware Ltd.
+ * Copyright 2023 Emcraft Systems.
  *
  * FlexSPI is a flexsible SPI host controller which supports two SPI
  * channels and up to 4 external devices. Each channel supports
@@ -338,6 +339,7 @@ struct nxp_fspi_devtype_data {
 	unsigned int rxfifo;
 	unsigned int txfifo;
 	unsigned int ahb_buf_size;
+	unsigned int ahb_buf_num;
 	unsigned int quirks;
 	bool little_endian;
 };
@@ -346,6 +348,7 @@ static struct nxp_fspi_devtype_data lx2160a_data = {
 	.rxfifo = SZ_512,       /* (64  * 64 bits)  */
 	.txfifo = SZ_1K,        /* (128 * 64 bits)  */
 	.ahb_buf_size = SZ_2K,  /* (256 * 64 bits)  */
+	.ahb_buf_num = 8,
 	.quirks = NXP_FSPI_QUIRK_DISABLE_DTR,
 	.little_endian = true,  /* little-endian    */
 };
@@ -354,6 +357,7 @@ static struct nxp_fspi_devtype_data imx8mm_data = {
 	.rxfifo = SZ_512,       /* (64  * 64 bits)  */
 	.txfifo = SZ_1K,        /* (128 * 64 bits)  */
 	.ahb_buf_size = SZ_2K,  /* (256 * 64 bits)  */
+	.ahb_buf_num = 8,
 	.quirks = 0,
 	.little_endian = true,  /* little-endian    */
 };
@@ -362,6 +366,7 @@ static struct nxp_fspi_devtype_data imx8qxp_data = {
 	.rxfifo = SZ_512,       /* (64  * 64 bits)  */
 	.txfifo = SZ_1K,        /* (128 * 64 bits)  */
 	.ahb_buf_size = SZ_2K,  /* (256 * 64 bits)  */
+	.ahb_buf_num = 8,
 	.quirks = 0,
 	.little_endian = true,  /* little-endian    */
 };
@@ -370,7 +375,17 @@ static struct nxp_fspi_devtype_data imx8dxl_data = {
 	.rxfifo = SZ_512,       /* (64  * 64 bits)  */
 	.txfifo = SZ_1K,        /* (128 * 64 bits)  */
 	.ahb_buf_size = SZ_2K,  /* (256 * 64 bits)  */
+	.ahb_buf_num = 8,
 	.quirks = FSPI_QUIRK_USE_IP_ONLY,
+	.little_endian = true,  /* little-endian    */
+};
+
+static struct nxp_fspi_devtype_data imxrt1050_data = {
+	.rxfifo = SZ_128,
+	.txfifo = SZ_128,
+	.ahb_buf_size = SZ_1K,
+	.ahb_buf_num = 4,
+	.quirks = 0,
 	.little_endian = true,  /* little-endian    */
 };
 
@@ -1187,7 +1202,7 @@ static int nxp_fspi_default_setup(struct nxp_fspi *f)
 	fspi_writel(f, reg, base + FSPI_MCR2);
 
 	/* AHB configuration for access buffer 0~7. */
-	for (i = 0; i < 7; i++)
+	for (i = 0; i < f->devtype_data->ahb_buf_num; i++)
 		fspi_writel(f, 0, base + FSPI_AHBRX_BUF0CR0 + 4 * i);
 
 	/*
@@ -1195,7 +1210,8 @@ static int nxp_fspi_default_setup(struct nxp_fspi *f)
 	 * performance.
 	 */
 	fspi_writel(f, (f->devtype_data->ahb_buf_size / 8 |
-		  FSPI_AHBRXBUF0CR7_PREF), base + FSPI_AHBRX_BUF7CR0);
+		    FSPI_AHBRXBUF0CR7_PREF),
+		    base + FSPI_AHBRX_BUF0CR0 + (4 * (f->devtype_data->ahb_buf_num - 1)));
 
 	/* prefetch and no start address alignment limitation */
 	fspi_writel(f, FSPI_AHBCR_PREF_EN | FSPI_AHBCR_RDADDROPT,
@@ -1480,6 +1496,7 @@ static const struct of_device_id nxp_fspi_dt_ids[] = {
 	{ .compatible = "nxp,imx8mp-fspi", .data = (void *)&imx8mm_data, },
 	{ .compatible = "nxp,imx8qxp-fspi", .data = (void *)&imx8qxp_data, },
 	{ .compatible = "nxp,imx8dxl-fspi", .data = (void *)&imx8dxl_data, },
+	{ .compatible = "nxp,imxrt1050-fspi", .data = (void *)&imxrt1050_data, },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, nxp_fspi_dt_ids);
