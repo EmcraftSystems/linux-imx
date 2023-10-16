@@ -294,5 +294,27 @@
 			/* TBD */
 			status = "disabled";
 		};
+
+		can1: can@401d0000 {
+			compatible = "fsl,imx6q-flexcan";
+			reg = <0x401d0000 0x4000>;
+			interrupts = <36>;
+			clocks = <&clks IMXRT1050_CLK_CAN1_IPG>,
+				 <&clks IMXRT1050_CLK_CAN1_SERIAL>;
+			clock-names = "ipg", "per";
+			fsl,stop-mode = <&gpr 0x10 1>;
+			status = "disabled";
+		};
+
+		can2: can@401d4000 {
+			compatible = "fsl,imx6q-flexcan";
+			reg = <0x401d4000 0x4000>;
+			interrupts = <37>;
+			clocks = <&clks IMXRT1050_CLK_CAN2_IPG>,
+				 <&clks IMXRT1050_CLK_CAN2_SERIAL>;
+			clock-names = "ipg", "per";
+			fsl,stop-mode = <&gpr 0x10 2>;
+			status = "disabled";
+		};
 	};
 };
