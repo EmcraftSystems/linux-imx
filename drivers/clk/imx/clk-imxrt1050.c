@@ -44,6 +44,7 @@ static const char *const semc_alt_sels[] = { "pll2_pfd2_396m", "pll3_pfd1_664_62
 static const char *const semc_sels[] = { "periph_sel", "semc_alt_sel", };
 static const char *const lpi2c_sels[] = { "pll3_60m", "osc", };
 static const char *const lpspi_sels[] = { "pll3_pfd1_664_62m",  "pll3_pfd0_720m", "pll2_sys", "pll2_pfd2_396m" };
+static const char *const can_sels[] = { "pll3_60m", "osc", "pll3_80m", "dummy" };
 
 static struct clk_hw **hws;
 static struct clk_hw_onecell_data *clk_hw_data;
@@ -159,6 +160,8 @@ static int imxrt1050_clocks_probe(struct platform_device *pdev)
 		usdhc_sels, ARRAY_SIZE(usdhc_sels));
 	hws[IMXRT1050_CLK_USDHC2_SEL] = imx_clk_hw_mux("usdhc2_sel", ccm_base + 0x1c, 17, 1,
 		usdhc_sels, ARRAY_SIZE(usdhc_sels));
+	hws[IMXRT1050_CLK_CAN_SEL] = imx_clk_hw_mux("can_sel", ccm_base + 0x20, 8, 2,
+		can_sels, ARRAY_SIZE(can_sels));
 	hws[IMXRT1050_CLK_LPUART_SEL] = imx_clk_hw_mux("lpuart_sel", ccm_base + 0x24, 6, 1,
 		lpuart_sels, ARRAY_SIZE(lpuart_sels));
 	hws[IMXRT1050_CLK_LPI2C_SEL] = imx_clk_hw_mux("lpi2c_sel", ccm_base + 0x38, 18, 1,
@@ -176,6 +179,7 @@ static int imxrt1050_clocks_probe(struct platform_device *pdev)
 	hws[IMXRT1050_CLK_IPG_PODF] = imx_clk_hw_divider("ipg", "ahb", ccm_base + 0x14, 8, 2);
 	hws[IMXRT1050_CLK_PER_PODF] = imx_clk_hw_divider("per", "per_sel", ccm_base + 0x1C, 0, 5);
 
+	hws[IMXRT1050_CLK_CAN_PODF] = imx_clk_hw_divider("can_podf", "can_sel", ccm_base + 0x20, 2, 6);
 	hws[IMXRT1050_CLK_USDHC1_PODF] = imx_clk_hw_divider("usdhc1_podf", "usdhc1_sel", ccm_base + 0x24, 11, 3);
 	hws[IMXRT1050_CLK_USDHC2_PODF] = imx_clk_hw_divider("usdhc2_podf", "usdhc2_sel", ccm_base + 0x24, 16, 3);
 	hws[IMXRT1050_CLK_LPUART_PODF] = imx_clk_hw_divider("lpuart_podf", "lpuart_sel", ccm_base + 0x24, 0, 6);
@@ -195,6 +199,10 @@ static int imxrt1050_clocks_probe(struct platform_device *pdev)
 	hws[IMXRT1050_CLK_ENET] = imx_clk_hw_gate2("enet", "ipg", ccm_base + 0x6c, 10);
 	hws[IMXRT1050_CLK_USBOH3] = imx_clk_hw_gate2("usboh3", "ipg", ccm_base + 0x80, 0);
 	hws[IMXRT1050_CLK_LPI2C1] = imx_clk_hw_gate2("lpi2c1", "lpi2c_podf", ccm_base + 0x70, 6);
+	hws[IMXRT1050_CLK_CAN1_IPG] = imx_clk_hw_gate2("can1_ipg", "ipg", ccm_base + 0x68, 14);
+	hws[IMXRT1050_CLK_CAN1_SERIAL] = imx_clk_hw_gate2("can1_serial", "can_podf", ccm_base + 0x68, 16);
+	hws[IMXRT1050_CLK_CAN2_IPG] = imx_clk_hw_gate2("can2_ipg", "ipg", ccm_base + 0x68, 18);
+	hws[IMXRT1050_CLK_CAN2_SERIAL] = imx_clk_hw_gate2("can2_serial", "can_podf", ccm_base + 0x68, 20);
 	imx_check_clk_hws(hws, IMXRT1050_CLK_END);
 
 	ret = of_clk_add_hw_provider(np, of_clk_hw_onecell_get, clk_hw_data);
