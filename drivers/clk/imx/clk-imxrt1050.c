@@ -49,7 +49,8 @@ static struct clk_hw **hws;
 static struct clk_hw_onecell_data *clk_hw_data;
 
 static void add_adc_clocks(void __iomem *ccm_base) {
-	/* TBD */
+	hws[IMXRT1050_CLK_ADC2]	= imx_clk_hw_gate2("adc2", "ipg", ccm_base + 0x6c, 8);
+	hws[IMXRT1050_CLK_ADC1]	= imx_clk_hw_gate2("adc1", "ipg", ccm_base + 0x6c, 16);
 	return;
 }
 
