@@ -266,12 +266,26 @@
 		};
 
 		adc1: adc@400c4000 {
-			/* TBD */
+			compatible = "fsl,imxrt10xx-adc";
+			reg = <0x400c4000 0x4000>;
+			interrupts = <67>;
+			clocks = <&clks IMXRT1050_CLK_ADC1>;
+			clock-names = "adc";
+			num-channels = <16>;
+			fsl,adck-max-frequency = <30000000>, <40000000>,
+						 <20000000>;
 			status = "disabled";
 		};
 
 		adc2: adc@400c8000 {
-			/* TBD */
+			compatible = "fsl,imxrt10xx-adc";
+			reg = <0x400c8000 0x4000>;
+			interrupts = <68>;
+			clocks = <&clks IMXRT1050_CLK_ADC2>;
+			clock-names = "adc";
+			num-channels = <16>;
+			fsl,adck-max-frequency = <30000000>, <40000000>,
+						 <20000000>;
 			status = "disabled";
 		};
 
