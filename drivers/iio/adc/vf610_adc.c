@@ -3,6 +3,9 @@
  * Freescale Vybrid vf610 ADC driver
  *
  * Copyright 2013 Freescale Semiconductor, Inc.
+ *
+ * Copyright (C) 2023 Emcraft Systems
+ * Author(s): Vladimir Skvortsov <vskvortsov@emcraft.com>
  */
 
 #include <linux/module.h>
@@ -29,20 +32,6 @@
 
 /* This will be the driver name the kernel reports */
 #define DRIVER_NAME "vf610-adc"
-
-/* Vybrid/IMX ADC registers */
-#define VF610_REG_ADC_HC0		0x00
-#define VF610_REG_ADC_HC1		0x04
-#define VF610_REG_ADC_HS		0x08
-#define VF610_REG_ADC_R0		0x0c
-#define VF610_REG_ADC_R1		0x10
-#define VF610_REG_ADC_CFG		0x14
-#define VF610_REG_ADC_GC		0x18
-#define VF610_REG_ADC_GS		0x1c
-#define VF610_REG_ADC_CV		0x20
-#define VF610_REG_ADC_OFS		0x24
-#define VF610_REG_ADC_CAL		0x28
-#define VF610_REG_ADC_PCTL		0x30
 
 /* Configuration register field define */
 #define VF610_ADC_MODE_BIT8		0x00
@@ -152,6 +141,22 @@ struct vf610_adc_feature {
 	bool	ovwren;
 };
 
+struct vf610_adc_match_data {
+	/* Vybrid/IMX/IMXRT ADC registers */
+	struct {
+		u8 HC0;
+		u8 HS;
+		u8 R0;
+		u8 CFG;
+		u8 GC;
+		u8 GS;
+		u8 CV;
+		u8 OFS;
+		u8 CAL;
+		u8 PCTL;
+	} reg_offsets;
+};
+
 struct vf610_adc {
 	struct device *dev;
 	void __iomem *regs;
@@ -160,6 +165,9 @@ struct vf610_adc {
 	u32 vref_uv;
 	u32 value;
 	struct regulator *vref;
+
+	int qlen;
+	const struct vf610_adc_match_data *mdata;
 
 	u32 max_adck_rate[3];
 	struct vf610_adc_feature adc_feature;
@@ -287,8 +295,8 @@ static void vf610_adc_cfg_post_set(struct vf610_adc *info)
 	if (adc_feature->ovwren)
 		cfg_data |= VF610_ADC_OVWREN;
 
-	writel(cfg_data, info->regs + VF610_REG_ADC_CFG);
-	writel(gc_data, info->regs + VF610_REG_ADC_GC);
+	writel(cfg_data, info->regs + info->mdata->reg_offsets.CFG);
+	writel(gc_data, info->regs + info->mdata->reg_offsets.GC);
 }
 
 static void vf610_adc_calibration(struct vf610_adc *info)
@@ -300,15 +308,15 @@ static void vf610_adc_calibration(struct vf610_adc *info)
 
 	/* enable calibration interrupt */
 	hc_cfg = VF610_ADC_AIEN | VF610_ADC_CONV_DISABLE;
-	writel(hc_cfg, info->regs + VF610_REG_ADC_HC0);
+	writel(hc_cfg, info->regs + info->mdata->reg_offsets.HC0);
 
-	adc_gc = readl(info->regs + VF610_REG_ADC_GC);
-	writel(adc_gc | VF610_ADC_CAL, info->regs + VF610_REG_ADC_GC);
+	adc_gc = readl(info->regs + info->mdata->reg_offsets.GC);
+	writel(adc_gc | VF610_ADC_CAL, info->regs + info->mdata->reg_offsets.GC);
 
 	if (!wait_for_completion_timeout(&info->completion, VF610_ADC_TIMEOUT))
 		dev_err(info->dev, "Timeout for adc calibration\n");
 
-	adc_gc = readl(info->regs + VF610_REG_ADC_GS);
+	adc_gc = readl(info->regs + info->mdata->reg_offsets.GS);
 	if (adc_gc & VF610_ADC_CALF)
 		dev_err(info->dev, "ADC calibration failed\n");
 
@@ -320,7 +328,7 @@ static void vf610_adc_cfg_set(struct vf610_adc *info)
 	struct vf610_adc_feature *adc_feature = &(info->adc_feature);
 	int cfg_data;
 
-	cfg_data = readl(info->regs + VF610_REG_ADC_CFG);
+	cfg_data = readl(info->regs + info->mdata->reg_offsets.CFG);
 
 	cfg_data &= ~VF610_ADC_ADLPC_EN;
 	if (adc_feature->conv_mode == VF610_ADC_CONV_LOW_POWER)
@@ -330,7 +338,7 @@ static void vf610_adc_cfg_set(struct vf610_adc *info)
 	if (adc_feature->conv_mode == VF610_ADC_CONV_HIGH_SPEED)
 		cfg_data |= VF610_ADC_ADHSC_EN;
 
-	writel(cfg_data, info->regs + VF610_REG_ADC_CFG);
+	writel(cfg_data, info->regs + info->mdata->reg_offsets.CFG);
 }
 
 static void vf610_adc_sample_set(struct vf610_adc *info)
@@ -338,8 +346,8 @@ static void vf610_adc_sample_set(struct vf610_adc *info)
 	struct vf610_adc_feature *adc_feature = &(info->adc_feature);
 	int cfg_data, gc_data;
 
-	cfg_data = readl(info->regs + VF610_REG_ADC_CFG);
-	gc_data = readl(info->regs + VF610_REG_ADC_GC);
+	cfg_data = readl(info->regs + info->mdata->reg_offsets.CFG);
+	gc_data = readl(info->regs + info->mdata->reg_offsets.GC);
 
 	/* resolution mode */
 	cfg_data &= ~VF610_ADC_MODE_MASK;
@@ -445,8 +453,8 @@ static void vf610_adc_sample_set(struct vf610_adc *info)
 			"error hardware sample average select\n");
 	}
 
-	writel(cfg_data, info->regs + VF610_REG_ADC_CFG);
-	writel(gc_data, info->regs + VF610_REG_ADC_GC);
+	writel(cfg_data, info->regs + info->mdata->reg_offsets.CFG);
+	writel(gc_data, info->regs + info->mdata->reg_offsets.GC);
 }
 
 static void vf610_adc_hw_init(struct vf610_adc *info)
@@ -554,7 +562,7 @@ static int vf610_adc_read_data(struct vf610_adc *info)
 {
 	int result;
 
-	result = readl(info->regs + VF610_REG_ADC_R0);
+	result = readl(info->regs + info->mdata->reg_offsets.R0);
 
 	switch (info->adc_feature.res_mode) {
 	case 8:
@@ -579,7 +587,7 @@ static irqreturn_t vf610_adc_isr(int irq, void *dev_id)
 	struct vf610_adc *info = iio_priv(indio_dev);
 	int coco;
 
-	coco = readl(info->regs + VF610_REG_ADC_HS);
+	coco = readl(info->regs + info->mdata->reg_offsets.HS);
 	if (coco & VF610_ADC_HS_COCO0) {
 		info->value = vf610_adc_read_data(info);
 		if (iio_buffer_enabled(indio_dev)) {
@@ -645,7 +653,7 @@ static int vf610_read_raw(struct iio_dev *indio_dev,
 		reinit_completion(&info->completion);
 		hc_cfg = VF610_ADC_ADCHC(chan->channel);
 		hc_cfg |= VF610_ADC_AIEN;
-		writel(hc_cfg, info->regs + VF610_REG_ADC_HC0);
+		writel(hc_cfg, info->regs + info->mdata->reg_offsets.HC0);
 		ret = wait_for_completion_interruptible_timeout
 				(&info->completion, VF610_ADC_TIMEOUT);
 		if (ret == 0) {
@@ -730,9 +738,9 @@ static int vf610_adc_buffer_postenable(struct iio_dev *indio_dev)
 	unsigned int channel;
 	int val;
 
-	val = readl(info->regs + VF610_REG_ADC_GC);
+	val = readl(info->regs + info->mdata->reg_offsets.GC);
 	val |= VF610_ADC_ADCON;
-	writel(val, info->regs + VF610_REG_ADC_GC);
+	writel(val, info->regs + info->mdata->reg_offsets.GC);
 
 	channel = find_first_bit(indio_dev->active_scan_mask,
 						indio_dev->masklength);
@@ -740,7 +748,7 @@ static int vf610_adc_buffer_postenable(struct iio_dev *indio_dev)
 	val = VF610_ADC_ADCHC(channel);
 	val |= VF610_ADC_AIEN;
 
-	writel(val, info->regs + VF610_REG_ADC_HC0);
+	writel(val, info->regs + info->mdata->reg_offsets.HC0);
 
 	return 0;
 }
@@ -751,14 +759,14 @@ static int vf610_adc_buffer_predisable(struct iio_dev *indio_dev)
 	unsigned int hc_cfg = 0;
 	int val;
 
-	val = readl(info->regs + VF610_REG_ADC_GC);
+	val = readl(info->regs + info->mdata->reg_offsets.GC);
 	val &= ~VF610_ADC_ADCON;
-	writel(val, info->regs + VF610_REG_ADC_GC);
+	writel(val, info->regs + info->mdata->reg_offsets.GC);
 
 	hc_cfg |= VF610_ADC_CONV_DISABLE;
 	hc_cfg &= ~VF610_ADC_AIEN;
 
-	writel(hc_cfg, info->regs + VF610_REG_ADC_HC0);
+	writel(hc_cfg, info->regs + info->mdata->reg_offsets.HC0);
 
 	return 0;
 }
@@ -776,7 +784,7 @@ static int vf610_adc_reg_access(struct iio_dev *indio_dev,
 	struct vf610_adc *info = iio_priv(indio_dev);
 
 	if ((readval == NULL) ||
-		((reg % 4) || (reg > VF610_REG_ADC_PCTL)))
+		((reg % 4) || (reg > info->mdata->reg_offsets.PCTL)))
 		return -EINVAL;
 
 	*readval = readl(info->regs + reg);
@@ -791,8 +799,39 @@ static const struct iio_info vf610_adc_iio_info = {
 	.attrs = &vf610_attribute_group,
 };
 
+static struct vf610_adc_match_data vf610_data = {
+	.reg_offsets = {
+		.HC0 = 0x00,
+		.HS = 0x8,
+		.R0 = 0x0c,
+		.CFG = 0x14,
+		.GC = 0x18,
+		.GS = 0x1c,
+		.CV = 0x20,
+		.OFS = 0x24,
+		.CAL = 0x28,
+		.PCTL = 0x30,
+	},
+};
+
+static struct vf610_adc_match_data imxrt10xx_data = {
+	.reg_offsets = {
+		.HC0 = 0x00,
+		.HS = 0x20,
+		.R0 = 0x24,
+		.CFG = 0x44,
+		.GC = 0x48,
+		.GS = 0x4c,
+		.CV = 0x50,
+		.OFS = 0x54,
+		.CAL = 0x58,
+		.PCTL = 0x60,
+	},
+};
+
 static const struct of_device_id vf610_adc_match[] = {
-	{ .compatible = "fsl,vf610-adc", },
+	{ .compatible = "fsl,vf610-adc", .data = &vf610_data},
+	{ .compatible = "fsl,imxrt10xx-adc", .data = &imxrt10xx_data},
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, vf610_adc_match);
@@ -817,6 +856,13 @@ static int vf610_adc_probe(struct platform_device *pdev)
 	info->regs = devm_platform_ioremap_resource(pdev, 0);
 	if (IS_ERR(info->regs))
 		return PTR_ERR(info->regs);
+
+	info->mdata = device_get_match_data(&pdev->dev);
+	if (IS_ERR(info->mdata) || !info->mdata) {
+		dev_err(&pdev->dev, "failed getting SoC data, err = %ld\n",
+			PTR_ERR(info->mdata));
+		return PTR_ERR(info->mdata);
+	}
 
 	irq = platform_get_irq(pdev, 0);
 	if (irq < 0)
@@ -926,9 +972,9 @@ static int vf610_adc_suspend(struct device *dev)
 	int hc_cfg;
 
 	/* ADC controller enters to stop mode */
-	hc_cfg = readl(info->regs + VF610_REG_ADC_HC0);
+	hc_cfg = readl(info->regs + info->mdata->reg_offsets.HC0);
 	hc_cfg |= VF610_ADC_CONV_DISABLE;
-	writel(hc_cfg, info->regs + VF610_REG_ADC_HC0);
+	writel(hc_cfg, info->regs + info->mdata->reg_offsets.HC0);
 
 	clk_disable_unprepare(info->clk);
 	regulator_disable(info->vref);
