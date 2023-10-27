@@ -54,7 +54,17 @@ static void add_adc_clocks(void __iomem *ccm_base) {
 }
 
 static void add_lpspi_clocks(void __iomem *ccm_base) {
-	/* TBD */
+
+	hws[IMXRT1050_CLK_LPSPI_SEL] = imx_clk_hw_mux("lpspi_sel", ccm_base + 0x18, 4, 2,
+						      lpspi_sels, ARRAY_SIZE(lpspi_sels));
+
+	hws[IMXRT1050_CLK_LPSPI_PODF] = imx_clk_hw_divider("lpspi_podf", "lpspi_sel", ccm_base + 0x18, 26, 3);
+
+	hws[IMXRT1050_CLK_LPSPI1] = imx_clk_hw_gate2("lpspi1", "lpspi_podf", ccm_base + 0x6c, 0);
+	hws[IMXRT1050_CLK_LPSPI2] = imx_clk_hw_gate2("lpspi2", "lpspi_podf", ccm_base + 0x6c, 1);
+	hws[IMXRT1050_CLK_LPSPI3] = imx_clk_hw_gate2("lpspi3", "lpspi_podf", ccm_base + 0x6c, 2);
+	hws[IMXRT1050_CLK_LPSPI4] = imx_clk_hw_gate2("lpspi4", "lpspi_podf", ccm_base + 0x6c, 3);
+
 	return;
 }
 

@@ -265,22 +265,46 @@
 		};
 
 		lpspi1: lpspi@40394000 {
-			/* TBD */
+			compatible = "fsl,imx7ulp-spi";
+			reg = <0x40394000 0x4000>;
+			interrupts = <32>;
+			clocks = <&clks IMXRT1050_CLK_LPSPI1>, <&clks IMXRT1050_CLK_DUMMY>;
+			clock-names = "per", "ipg" ;
+			dmas = <&edma1 0 14>, <&edma1 0 13>;
+			dma-names = "tx","rx";
 			status = "disabled";
 		};
 
 		lpspi2: lpspi@40398000 {
-			/* TBD */
+			compatible = "fsl,imx7ulp-spi";
+			reg = <0x40398000 0x4000>;
+			interrupts = <33>;
+			clocks = <&clks IMXRT1050_CLK_LPSPI2>, <&clks IMXRT1050_CLK_DUMMY>;
+			clock-names = "per", "ipg" ;
+			dmas = <&edma1 0 78>, <&edma1 0 77>;
+			dma-names = "tx","rx";
 			status = "disabled";
 		};
 
 		lpspi3: lpspi@4039c000 {
-			/* TBD */
+			compatible = "fsl,imx7ulp-spi";
+			reg = <0x4039c000 0x4000>;
+			interrupts = <34>;
+			clocks = <&clks IMXRT1050_CLK_LPSPI3>, <&clks IMXRT1050_CLK_DUMMY>;
+			clock-names = "per", "ipg" ;
+			dmas = <&edma1 0 16>, <&edma1 0 15>;
+			dma-names = "tx","rx";
 			status = "disabled";
 		};
 
 		lpspi4: lpspi@403a0000 {
-			/* TBD */
+			compatible = "fsl,imx7ulp-spi";
+			reg = <0x403a0000 0x4000>;
+			interrupts = <35>;
+			clocks = <&clks IMXRT1050_CLK_LPSPI4>, <&clks IMXRT1050_CLK_DUMMY>;
+			clock-names = "per", "ipg" ;
+			dmas = <&edma1 0 80>, <&edma1 0 79>;
+			dma-names = "tx","rx";
 			status = "disabled";
 		};
 	};
