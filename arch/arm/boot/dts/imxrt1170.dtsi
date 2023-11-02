@@ -422,17 +422,35 @@
 		};
 
 		flexcan1: can@400c4000 {
-			/* TBD */
+			compatible = "fsl,vf610-flexcan";
+			reg = <0x400c4000 0x4000>;
+			interrupts = <44>;
+			clocks = <&clks IMXRT1170_CLK_ROOT_BUS>,
+				 <&clks IMXRT1170_CLK_CAN1>;
+			clock-names = "ipg", "per";
+			fsl,clk-source = /bits/ 8 <0>;
 			status = "disabled";
 		};
 
 		flexcan2: can@400c8000 {
-			/* TBD */
+			compatible = "fsl,vf610-flexcan";
+			reg = <0x400c8000 0x4000>;
+			interrupts = <46>;
+			clocks = <&clks IMXRT1170_CLK_ROOT_BUS>,
+				 <&clks IMXRT1170_CLK_CAN2>;
+			clock-names = "ipg", "per";
+			fsl,clk-source = /bits/ 8 <0>;
 			status = "disabled";
 		};
 
 		flexcan3: can@40c3c000 {
-			/* TBD */
+			compatible = "fsl,vf610-flexcan";
+			reg = <0x40c3c000 0x4000>;
+			interrupts = <48>;
+			clocks = <&clks IMXRT1170_CLK_ROOT_BUS_LPSR>,
+				 <&clks IMXRT1170_CLK_CAN3>;
+			clock-names = "ipg", "per";
+			fsl,clk-source = /bits/ 8 <0>;
 			status = "disabled";
 		};
 
