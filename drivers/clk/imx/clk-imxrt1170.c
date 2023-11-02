@@ -35,6 +35,12 @@ static const char * const lpi2c1_4_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll3_div2", "pll1_div5", "pll2_sys", "pll2_pfd3"};
 static const char * const lpi2c5_6_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll3_pfd3", "pll3_sys", "pll2_pfd3", "pll1_div5"};
+static const char * const can1_sels[] = {IMXRT1170_CLK_SRC_COMMON,
+"pll3_div2", "pll1_div5", "pll2_sys", "pll2_pfd3"};
+static const char * const can2_sels[] = {IMXRT1170_CLK_SRC_COMMON,
+"pll3_div2", "pll1_div5", "pll2_sys", "pll2_pfd3"};
+static const char * const can3_sels[] = {IMXRT1170_CLK_SRC_COMMON,
+"pll3_pfd3", "pll3_sys", "pll2_pfd3", "pll1_div5"};
 
 struct clk_hw *imxrt1170_clk_pll_div_out_composite(const char *name, const char *parent_name,
 						void __iomem *reg, int div_factor, int gate_bit, unsigned long flags)
@@ -88,6 +94,9 @@ static struct imxrt1170_clk_root clk_roots[] = {
 	{ IMXRT1170_CLK_ROOT_BUS_LPSR, "bus_lpsr_root", bus_lpsr_sels, (3 * 0x80), CLK_IS_CRITICAL },
 	{ IMXRT1170_CLK_ROOT_SEMC, "semc_root", semc_sels, (4 * 0x80), CLK_IS_CRITICAL },
 	{ IMXRT1170_CLK_ROOT_GPT1, "gpt1_root", gpt1_sels, (14 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_CAN1, "can1_root", can1_sels, (22 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_CAN2, "can2_root", can2_sels, (23 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_CAN3, "can3_root", can3_sels, (24 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_LPUART1, "lpuart1_root", lpuart1_sels, (25 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_LPI2C1, "lpi2c1_root", lpi2c1_4_sels, (37 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_LPI2C2, "lpi2c2_root", lpi2c1_4_sels, (38 * 0x80), },
@@ -112,6 +121,9 @@ static struct imxrt1170_clk_ccgr clk_ccgrs[] = {
 	{ IMXRT1170_CLK_EDMA, "edma", "bus_root", (0x6000 + (20 * 0x20)) },
 	{ IMXRT1170_CLK_SEMC, "semc", "semc_root", (0x6000 + (33 * 0x20)), CLK_IS_CRITICAL },
 	{ IMXRT1170_CLK_GPT1, "gpt1", "gpt1_root", (0x6000 + (64 * 0x20)), },
+	{ IMXRT1170_CLK_CAN1, "can1", "can1_root", (0x6000 + (83 * 0x20)), },
+	{ IMXRT1170_CLK_CAN2, "can2", "can2_root", (0x6000 + (84 * 0x20)), },
+	{ IMXRT1170_CLK_CAN3, "can3", "can3_root", (0x6000 + (85 * 0x20)), },
 	{ IMXRT1170_CLK_LPUART1, "lpuart1", "lpuart1_root", (0x6000 + (86 * 0x20)), },
 	{ IMXRT1170_CLK_LPI2C1, "lpi2c1", "lpi2c1_root", (0x6000 + (98 * 0x20)), },
 	{ IMXRT1170_CLK_LPI2C2, "lpi2c2", "lpi2c2_root", (0x6000 + (99 * 0x20)), },
