@@ -14,6 +14,7 @@
 #include <linux/bits.h>
 #include <linux/clk.h>
 #include <linux/completion.h>
+#include <linux/of.h>
 #include <linux/delay.h>
 #include <linux/err.h>
 #include <linux/interrupt.h>
@@ -38,8 +39,8 @@
 #define IMX8QXP_ADR_ADC_FCTRL		0x30
 #define IMX8QXP_ADR_ADC_SWTRIG		0x34
 #define IMX8QXP_ADR_ADC_TCTRL(tid)	(0xc0 + (tid) * 4)
-#define IMX8QXP_ADR_ADC_CMDH(cid)	(0x100 + (cid) * 8)
-#define IMX8QXP_ADR_ADC_CMDL(cid)	(0x104 + (cid) * 8)
+#define IMX8QXP_ADR_ADC_CMDL(cid)	(0x100 + (cid) * 8)
+#define IMX8QXP_ADR_ADC_CMDH(cid)	(0x104 + (cid) * 8)
 #define IMX8QXP_ADR_ADC_RESFIFO		0x300
 #define IMX8QXP_ADR_ADC_TST		0xffc
 
@@ -118,6 +119,13 @@ static const struct iio_chan_spec imx8qxp_adc_iio_channels[] = {
 	IMX8QXP_ADC_CHAN(5),
 	IMX8QXP_ADC_CHAN(6),
 	IMX8QXP_ADC_CHAN(7),
+	IMX8QXP_ADC_CHAN(8),
+	IMX8QXP_ADC_CHAN(9),
+	IMX8QXP_ADC_CHAN(10),
+	IMX8QXP_ADC_CHAN(11),
+	IMX8QXP_ADC_CHAN(12),
+	IMX8QXP_ADC_CHAN(13),
+	IMX8QXP_ADC_CHAN(14),
 };
 
 static void imx8qxp_adc_reset(struct imx8qxp_adc *adc)
@@ -139,8 +147,9 @@ static void imx8qxp_adc_reset(struct imx8qxp_adc *adc)
 
 static void imx8qxp_adc_reg_config(struct imx8qxp_adc *adc, int channel)
 {
-	u32 adc_cfg, adc_tctrl, adc_cmdl, adc_cmdh;
+	u32 adc_cfg, adc_tctrl, adc_cmdl, adc_cmdh, adc_chan_b;
 
+	adc_chan_b = channel % 2;
 	/* ADC configuration */
 	adc_cfg = FIELD_PREP(IMX8QXP_ADC_CFG_PWREN_MASK, 1) |
 		  FIELD_PREP(IMX8QXP_ADC_CFG_PUDLY_MASK, 0x80)|
@@ -160,8 +169,8 @@ static void imx8qxp_adc_reg_config(struct imx8qxp_adc *adc, int channel)
 	adc_cmdl = FIELD_PREP(IMX8QXP_ADC_CMDL_CSCALE_MASK, IMX8QXP_ADC_CMDL_CHANNEL_SCALE_FULL) |
 		   FIELD_PREP(IMX8QXP_ADC_CMDL_MODE_MASK, IMX8QXP_ADC_CMDL_STANDARD_RESOLUTION) |
 		   FIELD_PREP(IMX8QXP_ADC_CMDL_DIFF_MASK, IMX8QXP_ADC_CMDL_MODE_SINGLE) |
-		   FIELD_PREP(IMX8QXP_ADC_CMDL_ABSEL_MASK, IMX8QXP_ADC_CMDL_SEL_A_A_B_CHANNEL) |
-		   FIELD_PREP(IMX8QXP_ADC_CMDL_ADCH_MASK, channel);
+		   FIELD_PREP(IMX8QXP_ADC_CMDL_ABSEL_MASK, adc_chan_b) |
+		   FIELD_PREP(IMX8QXP_ADC_CMDL_ADCH_MASK, channel / 2);
 	writel(adc_cmdl, adc->regs + IMX8QXP_ADR_ADC_CMDL(0));
 
 	adc_cmdh = FIELD_PREP(IMX8QXP_ADC_CMDH_NEXT_MASK, 0) |
@@ -313,6 +322,7 @@ static int imx8qxp_adc_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	int irq;
 	int ret;
+	u32 channels;
 
 	indio_dev = devm_iio_device_alloc(dev, sizeof(*adc));
 	if (!indio_dev) {
@@ -354,11 +364,17 @@ static int imx8qxp_adc_probe(struct platform_device *pdev)
 
 	init_completion(&adc->completion);
 
+	ret = of_property_read_u32(pdev->dev.of_node,
+					 "num-channels", &channels);
+	if (ret) {
+		channels = ARRAY_SIZE(imx8qxp_adc_iio_channels);
+	}
+
 	indio_dev->name = ADC_DRIVER_NAME;
 	indio_dev->info = &imx8qxp_adc_iio_info;
 	indio_dev->modes = INDIO_DIRECT_MODE;
 	indio_dev->channels = imx8qxp_adc_iio_channels;
-	indio_dev->num_channels = ARRAY_SIZE(imx8qxp_adc_iio_channels);
+	indio_dev->num_channels = channels;
 
 	ret = clk_prepare_enable(adc->clk);
 	if (ret) {
