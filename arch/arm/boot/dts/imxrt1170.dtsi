@@ -364,13 +364,25 @@
 		};
 
 		adc1: adc@40050000 {
-			/* TBD */
-                        status = "disabled";
+			compatible = "nxp,imx8qxp-adc";
+			reg = <0x40050000 0x4000>;
+			interrupts = <88>;
+			clocks = <&clks IMXRT1170_CLK_ADC1>,
+				 <&clks IMXRT1170_CLK_ADC1>;
+			clock-names = "per", "ipg";
+			num-channels = <12>;
+			status = "disabled";
                 };
 
                 adc2: adc@40054000 {
-			/* TBD */
-                        status = "disabled";
+			compatible = "nxp,imx8qxp-adc";
+			reg = <0x40054000 0x4000>;
+			interrupts = <89>;
+			clocks = <&clks IMXRT1170_CLK_ADC2>,
+				 <&clks IMXRT1170_CLK_ADC2>;
+			clock-names = "per", "ipg";
+			num-channels = <14>;
+			status = "disabled";
                 };
 
 		flexspi1: spi@400cc000 {
