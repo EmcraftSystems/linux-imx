@@ -98,6 +98,7 @@ struct imx8qxp_adc {
 	/* Serialise ADC channel reads */
 	struct mutex lock;
 	struct completion completion;
+	bool chan_b_support;
 	u32 fifo[IMX8QXP_ADC_MAX_FIFO_SIZE];
 };
 
@@ -119,13 +120,6 @@ static const struct iio_chan_spec imx8qxp_adc_iio_channels[] = {
 	IMX8QXP_ADC_CHAN(5),
 	IMX8QXP_ADC_CHAN(6),
 	IMX8QXP_ADC_CHAN(7),
-	IMX8QXP_ADC_CHAN(8),
-	IMX8QXP_ADC_CHAN(9),
-	IMX8QXP_ADC_CHAN(10),
-	IMX8QXP_ADC_CHAN(11),
-	IMX8QXP_ADC_CHAN(12),
-	IMX8QXP_ADC_CHAN(13),
-	IMX8QXP_ADC_CHAN(14),
 };
 
 static void imx8qxp_adc_reset(struct imx8qxp_adc *adc)
@@ -149,7 +143,11 @@ static void imx8qxp_adc_reg_config(struct imx8qxp_adc *adc, int channel)
 {
 	u32 adc_cfg, adc_tctrl, adc_cmdl, adc_cmdh, adc_chan_b;
 
-	adc_chan_b = channel % 2;
+	adc_chan_b = 0;
+	if (adc->chan_b_support) {
+		adc_chan_b = channel % 2;
+		channel /= 2;
+	}
 	/* ADC configuration */
 	adc_cfg = FIELD_PREP(IMX8QXP_ADC_CFG_PWREN_MASK, 1) |
 		  FIELD_PREP(IMX8QXP_ADC_CFG_PUDLY_MASK, 0x80)|
@@ -170,7 +168,7 @@ static void imx8qxp_adc_reg_config(struct imx8qxp_adc *adc, int channel)
 		   FIELD_PREP(IMX8QXP_ADC_CMDL_MODE_MASK, IMX8QXP_ADC_CMDL_STANDARD_RESOLUTION) |
 		   FIELD_PREP(IMX8QXP_ADC_CMDL_DIFF_MASK, IMX8QXP_ADC_CMDL_MODE_SINGLE) |
 		   FIELD_PREP(IMX8QXP_ADC_CMDL_ABSEL_MASK, adc_chan_b) |
-		   FIELD_PREP(IMX8QXP_ADC_CMDL_ADCH_MASK, channel / 2);
+		   FIELD_PREP(IMX8QXP_ADC_CMDL_ADCH_MASK, channel);
 	writel(adc_cmdl, adc->regs + IMX8QXP_ADR_ADC_CMDL(0));
 
 	adc_cmdh = FIELD_PREP(IMX8QXP_ADC_CMDH_NEXT_MASK, 0) |
@@ -323,6 +321,7 @@ static int imx8qxp_adc_probe(struct platform_device *pdev)
 	int irq;
 	int ret;
 	u32 channels;
+	struct iio_chan_spec * adc_iio_channels = (struct iio_chan_spec *)imx8qxp_adc_iio_channels;
 
 	indio_dev = devm_iio_device_alloc(dev, sizeof(*adc));
 	if (!indio_dev) {
@@ -364,16 +363,39 @@ static int imx8qxp_adc_probe(struct platform_device *pdev)
 
 	init_completion(&adc->completion);
 
+	adc->chan_b_support = of_property_read_bool(pdev->dev.of_node, "channels-b-support");
+
 	ret = of_property_read_u32(pdev->dev.of_node,
 					 "num-channels", &channels);
 	if (ret) {
 		channels = ARRAY_SIZE(imx8qxp_adc_iio_channels);
+	} else if (channels) {
+		int i;
+
+		if (adc->chan_b_support) {
+			channels *= 2;
+		}
+
+		adc_iio_channels = (struct iio_chan_spec *)devm_kzalloc(dev, sizeof(*adc_iio_channels) * channels, GFP_KERNEL);
+		if (!adc_iio_channels) {
+			dev_err(dev, "Failed allocating memory for iio channels\n");
+			return -ENOMEM;
+		}
+
+		for (i = 0; i < channels; i++) {
+			(adc_iio_channels + i)->type = IIO_VOLTAGE;
+			(adc_iio_channels + i)->indexed = 1;
+			(adc_iio_channels + i)->channel = i;
+			(adc_iio_channels + i)->info_mask_separate = BIT(IIO_CHAN_INFO_RAW);
+			(adc_iio_channels + i)->info_mask_shared_by_type = BIT(IIO_CHAN_INFO_SCALE) |
+									BIT(IIO_CHAN_INFO_SAMP_FREQ);
+		}
 	}
 
 	indio_dev->name = ADC_DRIVER_NAME;
 	indio_dev->info = &imx8qxp_adc_iio_info;
 	indio_dev->modes = INDIO_DIRECT_MODE;
-	indio_dev->channels = imx8qxp_adc_iio_channels;
+	indio_dev->channels = adc_iio_channels;
 	indio_dev->num_channels = channels;
 
 	ret = clk_prepare_enable(adc->clk);
