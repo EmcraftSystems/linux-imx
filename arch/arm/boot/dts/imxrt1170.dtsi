@@ -443,7 +443,8 @@
 			clocks = <&clks IMXRT1170_CLK_ADC1>,
 				 <&clks IMXRT1170_CLK_ADC1>;
 			clock-names = "per", "ipg";
-			num-channels = <12>;
+			num-channels = <6>;
+			channels-b-support;
 			status = "disabled";
                 };
 
@@ -454,7 +455,8 @@
 			clocks = <&clks IMXRT1170_CLK_ADC2>,
 				 <&clks IMXRT1170_CLK_ADC2>;
 			clock-names = "per", "ipg";
-			num-channels = <14>;
+			num-channels = <7>;
+			channels-b-support;
 			status = "disabled";
                 };
 
