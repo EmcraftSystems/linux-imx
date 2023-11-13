@@ -457,32 +457,86 @@
 		};
 
 		lpspi1: spi@40114000 {
-			/* TBD */
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "fsl,imx7ulp-spi";
+			reg = <0x40114000 0x4000>;
+			interrupts = <38>;
+			clocks = <&clks IMXRT1170_CLK_LPSPI1>,
+				 <&clks IMXRT1170_CLK_DUMMY>;
+			clock-names = "per", "ipg";
+			dmas = <&edma0 0 37>, <&edma0 0 36>;
+			dma-names = "tx","rx";
 			status = "disabled";
 		};
 
 		lpspi2: spi@40118000 {
-			/* TBD */
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "fsl,imx7ulp-spi";
+			reg = <0x40118000 0x4000>;
+			interrupts = <39>;
+			clocks = <&clks IMXRT1170_CLK_LPSPI2>,
+				 <&clks IMXRT1170_CLK_DUMMY>;
+			clock-names = "per", "ipg";
+			dmas = <&edma0 0 39>, <&edma0 0 38>;
+			dma-names = "tx","rx";
 			status = "disabled";
 		};
 
 		lpspi3: spi@4011c000 {
-			/* TBD */
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "fsl,imx7ulp-spi";
+			reg = <0x4011c000 0x4000>;
+			interrupts = <40>;
+			clocks = <&clks IMXRT1170_CLK_LPSPI3>,
+				 <&clks IMXRT1170_CLK_DUMMY>;
+			clock-names = "per", "ipg";
+			dmas = <&edma0 0 41>, <&edma0 0 40>;
+			dma-names = "tx","rx";
 			status = "disabled";
 		};
 
 		lpspi4: spi@40120000 {
-			/* TBD */
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "fsl,imx7ulp-spi";
+			reg = <0x40120000 0x4000>;
+			interrupts = <41>;
+			clocks = <&clks IMXRT1170_CLK_LPSPI4>,
+				 <&clks IMXRT1170_CLK_DUMMY>;
+			clock-names = "per", "ipg";
+			dmas = <&edma0 0 43>, <&edma0 0 42>;
+			dma-names = "tx","rx";
 			status = "disabled";
 		};
 
 		lpspi5: spi@40c2c000 {
-			/* TBD */
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "fsl,imx7ulp-spi";
+			reg = <0x40c2c000 0x4000>;
+			interrupts = <42>;
+			clocks = <&clks IMXRT1170_CLK_LPSPI5>,
+				 <&clks IMXRT1170_CLK_DUMMY>;
+			clock-names = "per", "ipg";
+			dmas = <&edma0 0 45>, <&edma0 0 44>;
+			dma-names = "tx","rx";
 			status = "disabled";
 		};
 
 		lpspi6: spi@40c30000 {
-			/* TBD */
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "fsl,imx7ulp-spi";
+			reg = <0x40c30000 0x4000>;
+			interrupts = <43>;
+			clocks = <&clks IMXRT1170_CLK_LPSPI6>,
+				 <&clks IMXRT1170_CLK_DUMMY>;
+			clock-names = "per", "ipg";
+			dmas = <&edma0 0 47>, <&edma0 0 46>;
+			dma-names = "tx","rx";
 			status = "disabled";
 		};
 	};
