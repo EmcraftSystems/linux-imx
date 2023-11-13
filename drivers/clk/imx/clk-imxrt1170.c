@@ -35,6 +35,10 @@ static const char * const lpi2c1_4_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll3_div2", "pll1_div5", "pll2_sys", "pll2_pfd3"};
 static const char * const lpi2c5_6_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll3_pfd3", "pll3_sys", "pll2_pfd3", "pll1_div5"};
+static const char * const lpspi1_4_sels[] = {IMXRT1170_CLK_SRC_COMMON,
+"pll3_pfd2", "pll1_div5", "pll2_sys", "pll2_pfd3"};
+static const char * const lpspi5_6_sels[] = {IMXRT1170_CLK_SRC_COMMON,
+"pll3_pfd3", "pll3_sys", "pll3_pfd2", "pll1_div5"};
 
 struct clk_hw *imxrt1170_clk_pll_div_out_composite(const char *name, const char *parent_name,
 						void __iomem *reg, int div_factor, int gate_bit, unsigned long flags)
@@ -95,6 +99,12 @@ static struct imxrt1170_clk_root clk_roots[] = {
 	{ IMXRT1170_CLK_ROOT_LPI2C4, "lpi2c4_root", lpi2c1_4_sels, (40 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_LPI2C5, "lpi2c5_root", lpi2c5_6_sels, (41 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_LPI2C6, "lpi2c6_root", lpi2c5_6_sels, (42 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_LPSPI1, "lpspi1_root", lpspi1_4_sels, (43 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_LPSPI2, "lpspi2_root", lpspi1_4_sels, (45 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_LPSPI3, "lpspi3_root", lpspi1_4_sels, (45 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_LPSPI4, "lpspi4_root", lpspi1_4_sels, (46 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_LPSPI5, "lpspi5_root", lpspi5_6_sels, (47 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_LPSPI6, "lpspi6_root", lpspi5_6_sels, (48 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_ENET1, "enet1_root", enet1_sels, (51 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_USDHC1, "usdhc1_root", usdhc1_sels, (58 * 0x80), },
 };
@@ -119,6 +129,12 @@ static struct imxrt1170_clk_ccgr clk_ccgrs[] = {
 	{ IMXRT1170_CLK_LPI2C4, "lpi2c4", "lpi2c4_root", (0x6000 + (101 * 0x20)), },
 	{ IMXRT1170_CLK_LPI2C5, "lpi2c5", "lpi2c5_root", (0x6000 + (102 * 0x20)), },
 	{ IMXRT1170_CLK_LPI2C6, "lpi2c6", "lpi2c6_root", (0x6000 + (103 * 0x20)), },
+	{ IMXRT1170_CLK_LPSPI1, "lpspi1", "lpspi1_root", (0x6000 + (104 * 0x20)), },
+	{ IMXRT1170_CLK_LPSPI2, "lpspi2", "lpspi2_root", (0x6000 + (105 * 0x20)), },
+	{ IMXRT1170_CLK_LPSPI3, "lpspi3", "lpspi3_root", (0x6000 + (106 * 0x20)), },
+	{ IMXRT1170_CLK_LPSPI4, "lpspi4", "lpspi4_root", (0x6000 + (107 * 0x20)), },
+	{ IMXRT1170_CLK_LPSPI5, "lpspi5", "lpspi5_root", (0x6000 + (108 * 0x20)), },
+	{ IMXRT1170_CLK_LPSPI6, "lpspi6", "lpspi6_root", (0x6000 + (109 * 0x20)), },
 	{ IMXRT1170_CLK_ENET1, "enet1", "enet1_root", (0x6000 + (112 * 0x20)), },
 	{ IMXRT1170_CLK_USB, "usb", "bus_root", (0x6000 + (115 * 0x20)), },
 	{ IMXRT1170_CLK_USDHC1, "usdhc1", "usdhc1_root", (0x6000 + (117 * 0x20)), },
