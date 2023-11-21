@@ -172,9 +172,9 @@ static int imxrt1050_clocks_probe(struct platform_device *pdev)
 	hws[IMXRT1050_CLK_SEMC_SEL] = imx_clk_hw_mux_flags("semc_sel", ccm_base + 0x14, 6, 1,
 		semc_sels, ARRAY_SIZE(semc_sels), CLK_IS_CRITICAL);
 
-	hws[IMXRT1050_CLK_AHB_PODF] = imx_clk_hw_divider("ahb", "periph_sel", ccm_base + 0x14, 10, 3);
-	hws[IMXRT1050_CLK_IPG_PDOF] = imx_clk_hw_divider("ipg", "ahb", ccm_base + 0x14, 8, 2);
-	hws[IMXRT1050_CLK_PER_PDOF] = imx_clk_hw_divider("per", "per_sel", ccm_base + 0x1C, 0, 5);
+	hws[IMXRT1050_CLK_AHB_PODF] = imx_clk_hw_divider_flags("ahb", "periph_sel", ccm_base + 0x14, 10, 3, CLK_IS_CRITICAL);
+	hws[IMXRT1050_CLK_IPG_PODF] = imx_clk_hw_divider("ipg", "ahb", ccm_base + 0x14, 8, 2);
+	hws[IMXRT1050_CLK_PER_PODF] = imx_clk_hw_divider("per", "per_sel", ccm_base + 0x1C, 0, 5);
 
 	hws[IMXRT1050_CLK_USDHC1_PODF] = imx_clk_hw_divider("usdhc1_podf", "usdhc1_sel", ccm_base + 0x24, 11, 3);
 	hws[IMXRT1050_CLK_USDHC2_PODF] = imx_clk_hw_divider("usdhc2_podf", "usdhc2_sel", ccm_base + 0x24, 16, 3);
