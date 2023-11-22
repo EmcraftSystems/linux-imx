@@ -265,6 +265,8 @@
 		};
 
 		lpspi1: lpspi@40394000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
 			compatible = "fsl,imx7ulp-spi";
 			reg = <0x40394000 0x4000>;
 			interrupts = <32>;
@@ -276,6 +278,8 @@
 		};
 
 		lpspi2: lpspi@40398000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
 			compatible = "fsl,imx7ulp-spi";
 			reg = <0x40398000 0x4000>;
 			interrupts = <33>;
@@ -287,6 +291,8 @@
 		};
 
 		lpspi3: lpspi@4039c000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
 			compatible = "fsl,imx7ulp-spi";
 			reg = <0x4039c000 0x4000>;
 			interrupts = <34>;
@@ -298,6 +304,8 @@
 		};
 
 		lpspi4: lpspi@403a0000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
 			compatible = "fsl,imx7ulp-spi";
 			reg = <0x403a0000 0x4000>;
 			interrupts = <35>;
