@@ -106,21 +106,30 @@ static int vfpm_notifier(struct notifier_block *self, unsigned long cmd,
 
 	switch (cmd) {
 	case THREAD_NOTIFY_FLUSH:
-		memset(&thread->vfpstate, 0, sizeof(thread->vfpstate));
-		thread->vfpstate.hard.used = 0;
-		/* fallthrough */
+		if (thread->vfpstate.hard.used != 0) {
+			memset(&thread->vfpstate, 0, sizeof(thread->vfpstate));
+			thread->vfpstate.hard.used = 0;
+			vfpm_disable_access();
+			vfpm_last_thread = NULL;
+		}
+		break;
 
 	case THREAD_NOTIFY_EXIT:
-		vfpm_disable_access();
-		vfpm_last_thread = NULL;
+		if (thread->vfpstate.hard.used != 0) {
+			vfpm_disable_access();
+			vfpm_last_thread = NULL;
+		}
 		break;
 
 	case THREAD_NOTIFY_SWITCH:
 		if (thread->vfpstate.hard.used)
 			vfpm_switch_to(thread);
-		else
+		else {
+			if (current_thread->vfpstate.hard.used != 0) {
+				vfpm_last_thread = current_thread;
+			}
 			vfpm_disable_access();
-
+		}
 		break;
 
 	case THREAD_NOTIFY_COPY:
