@@ -43,7 +43,10 @@ static const char *const lcdif_sels[] = {
 static const char *const semc_alt_sels[] = { "pll2_pfd2_396m", "pll3_pfd1_664_62m", };
 static const char *const semc_sels[] = { "periph_sel", "semc_alt_sel", };
 static const char *const lpi2c_sels[] = { "pll3_60m", "osc", };
+<<<<<<< HEAD
 static const char *const lpspi_sels[] = { "pll3_pfd1_664_62m",  "pll3_pfd0_720m", "pll2_sys", "pll2_pfd2_396m" };
+=======
+>>>>>>> 19034f4a1b63a89fba082dd92d881f5c2ca00213
 static const char *const can_sels[] = { "pll3_60m", "osc", "pll3_80m", "dummy" };
 
 static struct clk_hw **hws;
