@@ -154,6 +154,7 @@ struct fsl_edma_drvdata {
 	u32			dmamuxs;
 	bool			has_dmaclk;
 	bool			mux_swap;
+	u32			mux_slot_mask;
 	int			(*setup_irq)(struct platform_device *pdev,
 					     struct fsl_edma_engine *fsl_edma);
 	u8			txirq_count;
