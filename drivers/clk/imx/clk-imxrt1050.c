@@ -193,6 +193,8 @@ static int imxrt1050_clocks_probe(struct platform_device *pdev)
 	hws[IMXRT1050_CLK_USDHC1] = imx_clk_hw_gate2("usdhc1", "usdhc1_podf", ccm_base + 0x80, 2);
 	hws[IMXRT1050_CLK_USDHC2] = imx_clk_hw_gate2("usdhc2", "usdhc2_podf", ccm_base + 0x80, 4);
 	hws[IMXRT1050_CLK_LPUART1] = imx_clk_hw_gate2("lpuart1", "lpuart_podf", ccm_base + 0x7c, 24);
+	hws[IMXRT1050_CLK_LPUART2] = imx_clk_hw_gate2("lpuart2", "lpuart_podf", ccm_base + 0x68, 28);
+	hws[IMXRT1050_CLK_LPUART3] = imx_clk_hw_gate2("lpuart3", "lpuart_podf", ccm_base + 0x68, 12);
 	hws[IMXRT1050_CLK_LCDIF_APB] = imx_clk_hw_gate2("lcdif", "lcdif_podf", ccm_base + 0x70, 28);
 	hws[IMXRT1050_CLK_LCDIF_PIX] = imx_clk_hw_gate2("lcdif_pix", "lcdif", ccm_base + 0x74, 10);
 	hws[IMXRT1050_CLK_DMA] = imx_clk_hw_gate("dma", "ipg", ccm_base + 0x7C, 6);
@@ -201,6 +203,9 @@ static int imxrt1050_clocks_probe(struct platform_device *pdev)
 	hws[IMXRT1050_CLK_USBOH3] = imx_clk_hw_gate2("usboh3", "ipg", ccm_base + 0x80, 0);
 	hws[IMXRT1050_CLK_FLEXSPI] = imx_clk_hw_gate2("flexspi", "flexspi_podf", ccm_base + 0x80, 10);
 	hws[IMXRT1050_CLK_LPI2C1] = imx_clk_hw_gate2("lpi2c1", "lpi2c_podf", ccm_base + 0x70, 6);
+	hws[IMXRT1050_CLK_LPI2C2] = imx_clk_hw_gate2("lpi2c2", "lpi2c_podf", ccm_base + 0x70, 8);
+	hws[IMXRT1050_CLK_LPI2C3] = imx_clk_hw_gate2("lpi2c3", "lpi2c_podf", ccm_base + 0x70, 10);
+	hws[IMXRT1050_CLK_LPI2C4] = imx_clk_hw_gate2("lpi2c4", "lpi2c_podf", ccm_base + 0x80, 24);
 	imx_check_clk_hws(hws, IMXRT1050_CLK_END);
 
 	ret = of_clk_add_hw_provider(np, of_clk_hw_onecell_get, clk_hw_data);
