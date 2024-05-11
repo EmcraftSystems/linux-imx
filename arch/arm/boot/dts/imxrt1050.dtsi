@@ -37,6 +37,8 @@
 		gpio4 = &gpio5;
 		mmc0 = &usdhc1;
 		serial0 = &lpuart1;
+		serial1 = &lpuart2;
+		serial2 = &lpuart3;
 		usb0 = &usbotg1;
 		usb1 = &usbotg2;
 		usbphy0 = &usbphy1;
@@ -52,6 +54,30 @@
 			interrupts = <20>;
 			clocks = <&clks IMXRT1050_CLK_LPUART1>;
 			clock-names = "ipg";
+			status = "disabled";
+		};
+
+		lpuart2: serial@40188000 {
+			compatible = "fsl,imxrt1050-lpuart", "fsl,imx7ulp-lpuart";
+			reg = <0x40188000 0x1000>;
+			interrupts = <21>;
+			clocks = <&clks IMXRT1050_CLK_LPUART2>;
+			clock-names = "ipg";
+			dmas = <&edma1 0 67>,
+			       <&edma1 0 66>;
+			dma-names = "rx","tx";
+			status = "disabled";
+		};
+
+		lpuart3: serial@4018c000 {
+			compatible = "fsl,imxrt1050-lpuart", "fsl,imx7ulp-lpuart";
+			reg = <0x4018c000 0x1000>;
+			interrupts = <22>;
+			clocks = <&clks IMXRT1050_CLK_LPUART3>;
+			clock-names = "ipg";
+			dmas = <&edma1 0 5>,
+			       <&edma1 0 4>;
+			dma-names = "rx","tx";
 			status = "disabled";
 		};
 
@@ -102,7 +128,7 @@
 
 		edma1: dma-controller@400e8000 {
 			#dma-cells = <2>;
-			compatible = "fsl,imx7ulp-edma";
+			compatible = "fsl,imxrt1050-edma";
 			reg = <0x400e8000 0x4000>,
 				<0x400ec000 0x4000>;
 			dma-channels = <32>;
@@ -262,6 +288,41 @@
 			interrupts = <28>;
 			clocks = <&clks IMXRT1050_CLK_LPI2C1>, <&clks IMXRT1050_CLK_IPG_PODF>;
 			clock-names = "per", "ipg";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		lpi2c2: lpci2c@403f4000 {
+			compatible = "fsl,imx7ulp-lpi2c";
+			reg = <0x403f4000 0x4000>;
+			interrupts = <29>;
+			clocks = <&clks IMXRT1050_CLK_LPI2C2>, <&clks IMXRT1050_CLK_IPG_PODF>;
+			clock-names = "per", "ipg";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		lpi2c3: lpci2c@403f8000 {
+			compatible = "fsl,imx7ulp-lpi2c";
+			reg = <0x403f8000 0x4000>;
+			interrupts = <30>;
+			clocks = <&clks IMXRT1050_CLK_LPI2C3>, <&clks IMXRT1050_CLK_IPG_PODF>;
+			clock-names = "per", "ipg";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		lpi2c4: lpci2c@403fc000 {
+			compatible = "fsl,imx7ulp-lpi2c";
+			reg = <0x403fc000 0x4000>;
+			interrupts = <31>;
+			clocks = <&clks IMXRT1050_CLK_LPI2C4>, <&clks IMXRT1050_CLK_IPG_PODF>;
+			clock-names = "per", "ipg";
+			#address-cells = <1>;
+			#size-cells = <0>;
 			status = "disabled";
 		};
 
