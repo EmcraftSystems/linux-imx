@@ -32,6 +32,7 @@ static const char *const lpuart_sels[] = { "pll3_80m", "osc", };
 static const char *const semc_alt_sels[] = { "pll2_pfd2_396m", "pll3_pfd1_664_62m", };
 static const char *const semc_sels[] = { "periph_sel", "semc_alt_sel", };
 static const char *const lpi2c_sels[] = { "pll3_60m", "osc", };
+static const char *const can_sels[] = { "pll3_60m", "osc", "pll3_80m", "dummy" };
 
 static const char * const perclk_sels[] = {"ipg", "osc", };
 
@@ -129,6 +130,8 @@ static int imxrt1020_clk_probe(struct platform_device *pdev)
 	hws[IMXRT1020_CLK_USDHC2_SEL] = imx_clk_hw_mux("usdhc2_sel",
 		base + 0x1c, 17, 1,
 		usdhc_sels, ARRAY_SIZE(usdhc_sels));
+	hws[IMXRT1020_CLK_CAN_SEL] = imx_clk_hw_mux("can_sel", base + 0x20, 8, 2,
+		can_sels, ARRAY_SIZE(can_sels));
 	hws[IMXRT1020_CLK_LPUART_SEL] = imx_clk_hw_mux("lpuart_sel",
 		base + 0x24, 6, 1,
 		lpuart_sels, ARRAY_SIZE(lpuart_sels));
@@ -154,6 +157,7 @@ static int imxrt1020_clk_probe(struct platform_device *pdev)
 	hws[IMXRT1020_CLK_PER_PODF] = imx_clk_hw_divider("per", "perclk_sel",
 		base + 0x1c, 0, 5);
 
+	hws[IMXRT1020_CLK_CAN_PODF] = imx_clk_hw_divider("can_podf", "can_sel", base + 0x20, 2, 6);
 	hws[IMXRT1020_CLK_USDHC1_PODF] = imx_clk_hw_divider("usdhc1_podf", "usdhc1_sel",
 		base + 0x24, 11, 3);
 	hws[IMXRT1020_CLK_USDHC2_PODF] = imx_clk_hw_divider("usdhc2_podf", "usdhc2_sel",
@@ -175,6 +179,10 @@ static int imxrt1020_clk_probe(struct platform_device *pdev)
 	hws[IMXRT1020_CLK_LPI2C2] = imx_clk_hw_gate2("lpi2c2", "lpi2c_podf", base + 0x70, 8);
 	hws[IMXRT1020_CLK_LPI2C3] = imx_clk_hw_gate2("lpi2c3", "lpi2c_podf", base + 0x70, 10);
 	hws[IMXRT1020_CLK_LPI2C4] = imx_clk_hw_gate2("lpi2c4", "lpi2c_podf", base + 0x80, 24);
+	hws[IMXRT1020_CLK_CAN1_IPG] = imx_clk_hw_gate2("can1_ipg", "ipg", base + 0x68, 14);
+	hws[IMXRT1020_CLK_CAN1_SERIAL] = imx_clk_hw_gate2("can1_serial", "can_podf", base + 0x68, 16);
+	hws[IMXRT1020_CLK_CAN2_IPG] = imx_clk_hw_gate2("can2_ipg", "ipg", base + 0x68, 18);
+	hws[IMXRT1020_CLK_CAN2_SERIAL] = imx_clk_hw_gate2("can2_serial", "can_podf", base + 0x68, 20);
 
 	imx_check_clk_hws(hws, IMXRT1020_CLK_END);
 
