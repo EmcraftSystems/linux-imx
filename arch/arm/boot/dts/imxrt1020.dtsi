@@ -143,7 +143,7 @@
 			compatible = "fsl,imxrt-usbphy", "fsl,imx23-usbphy";
 			reg = <0x400d9000 0x1000>;
 			interrupts = <65>;
-			clocks = <&clks IMXRT1020_CLK_PLL3_USB_OTG>;
+			clocks = <&clks IMXRT1020_CLK_USBPHY1>;
 		};
 
 		usbotg1: usb@402e0000 {
@@ -219,7 +219,7 @@
 			clock-names = "ipg", "per";
 			fsl,stop-mode = <&gpr 0x10 1>;
 			status = "disabled";
-               };
+		};
 
 		can2: can@401d4000 {
 			compatible = "fsl,imx6q-flexcan";
@@ -230,7 +230,16 @@
 			clock-names = "ipg", "per";
 			fsl,stop-mode = <&gpr 0x10 2>;
 			status = "disabled";
-               };
+		};
 
+		adc1: adc@400c4000 {
+			/* TBD */
+			status = "disabled";
+		};
+
+		adc2: adc@400c8000 {
+			/* TBD */
+			status = "disabled";
+		};
 	};
 };
