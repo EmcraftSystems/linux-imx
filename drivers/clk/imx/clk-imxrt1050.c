@@ -132,8 +132,6 @@ static int imxrt1050_clocks_probe(struct platform_device *pdev)
 	hws[IMXRT1050_CLK_PLL2_PFD0_352M] = imx_clk_hw_pfd("pll2_pfd0_352m", "pll2_sys", pll_base + 0x100, 0);
 	hws[IMXRT1050_CLK_PLL2_PFD1_594M] = imx_clk_hw_pfd("pll2_pfd1_594m", "pll2_sys", pll_base + 0x100, 1);
 	hws[IMXRT1050_CLK_PLL2_PFD2_396M] = imx_clk_hw_pfd("pll2_pfd2_396m", "pll2_sys", pll_base + 0x100, 2);
-	hws[IMXRT1050_CLK_PLL3_PFD1_664_62M] = imx_clk_hw_pfd("pll3_pfd1_664_62m", "pll3_usb_otg", pll_base + 0xf0, 1);
-	hws[IMXRT1050_CLK_PLL3_PFD3_454_74M] = imx_clk_hw_pfd("pll3_pfd3_454_74m", "pll3_usb_otg", pll_base + 0xf0, 3);
 	hws[IMXRT1050_CLK_PLL3_PFD0_720M] = imx_clk_hw_pfd("pll3_pfd0_720m", "pll3", pll_base + 0xf0, 0);
 	hws[IMXRT1050_CLK_PLL3_PFD1_664_62M] = imx_clk_hw_pfd("pll3_pfd1_664_62m", "pll3", pll_base + 0xf0, 1);
 	hws[IMXRT1050_CLK_PLL3_PFD3_454_74M] = imx_clk_hw_pfd("pll3_pfd3_454_74m", "pll3", pll_base + 0xf0, 3);
@@ -146,10 +144,6 @@ static int imxrt1050_clocks_probe(struct platform_device *pdev)
 								    pll_base + 0xe0, 0, 2, 0, clk_enet_ref_table,
 								    &imx_ccm_lock);
 
-	hws[IMXRT1050_CLK_PLL6_ENET] = imx_clk_hw_gate("pll6_enet", "pll6", pll_base + 0xe0, 13);
-	hws[IMXRT1050_CLK_ENET_REF] = clk_hw_register_divider_table(NULL, "enet_ref", "pll6_enet", 0,
-								    pll_base + 0xe0, 0, 2, 0, clk_enet_ref_table,
-								    &imx_ccm_lock);
 
 	/* CCM clocks */
 	ccm_base = devm_platform_ioremap_resource(pdev, 0);
