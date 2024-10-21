@@ -816,6 +816,8 @@ disable:
 
 	return (result < 0) ? result : num;
 }
+
+#ifdef CONFIG_I2C_SLAVE
 static irqreturn_t lpi2c_imx_slave_isr(struct lpi2c_imx_struct *lpi2c_imx, u32 ssr, u32 sier_filter)
 {
 	u8 value;
@@ -862,6 +864,7 @@ ret:
 	writel(ssr & SSR_CLEAR_BITS, lpi2c_imx->base + LPI2C_SSR);
 	return IRQ_HANDLED;
 }
+#endif
 
 static irqreturn_t lpi2c_imx_master_isr(struct lpi2c_imx_struct *lpi2c_imx)
 {
@@ -889,6 +892,7 @@ static irqreturn_t lpi2c_imx_master_isr(struct lpi2c_imx_struct *lpi2c_imx)
 static irqreturn_t lpi2c_imx_isr(int irq, void *dev_id)
 {
 	struct lpi2c_imx_struct *lpi2c_imx = dev_id;
+#ifdef CONFIG_I2C_SLAVE
 	unsigned int scr;
 	u32 ssr, sier_filter;
 
@@ -901,9 +905,11 @@ static irqreturn_t lpi2c_imx_isr(int irq, void *dev_id)
 		else
 			return lpi2c_imx_master_isr(lpi2c_imx);
 	} else
+#endif
 		return lpi2c_imx_master_isr(lpi2c_imx);
 }
 
+#ifdef CONFIG_I2C_SLAVE
 static void lpi2c_imx_slave_init(struct lpi2c_imx_struct *lpi2c_imx)
 {
 	int temp;
@@ -949,7 +955,9 @@ static void lpi2c_imx_slave_init(struct lpi2c_imx_struct *lpi2c_imx)
 	/* Enable interrupt from i2c module */
 	writel(SLAVE_INT_FLAG, lpi2c_imx->base + LPI2C_SIER);
 }
+#endif
 
+#ifdef CONFIG_I2C_SLAVE
 static int lpi2c_imx_reg_slave(struct i2c_client *client)
 {
 	struct lpi2c_imx_struct *lpi2c_imx = i2c_get_adapdata(client->adapter);
@@ -971,7 +979,9 @@ static int lpi2c_imx_reg_slave(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
+#ifdef CONFIG_I2C_SLAVE
 static int lpi2c_imx_unreg_slave(struct i2c_client *client)
 {
 	struct lpi2c_imx_struct *lpi2c_imx = i2c_get_adapdata(client->adapter);
@@ -996,6 +1006,7 @@ static int lpi2c_imx_unreg_slave(struct i2c_client *client)
 
 	return ret;
 }
+#endif
 
 static void lpi2c_imx_prepare_recovery(struct i2c_adapter *adap)
 {
@@ -1071,8 +1082,10 @@ static u32 lpi2c_imx_func(struct i2c_adapter *adapter)
 static const struct i2c_algorithm lpi2c_imx_algo = {
 	.master_xfer	= lpi2c_imx_xfer,
 	.functionality	= lpi2c_imx_func,
+#ifdef CONFIG_I2C_SLAVE
 	.reg_slave		= lpi2c_imx_reg_slave,
 	.unreg_slave	= lpi2c_imx_unreg_slave,
+#endif
 };
 
 static const struct of_device_id lpi2c_imx_of_match[] = {
@@ -1330,14 +1343,18 @@ static int lpi2c_suspend_noirq(struct device *dev)
 static int lpi2c_resume_noirq(struct device *dev)
 {
 	int ret;
+#ifdef CONFIG_I2C_SLAVE
 	struct lpi2c_imx_struct *lpi2c_imx = dev_get_drvdata(dev);
+#endif
 
 	ret = pm_runtime_force_resume(dev);
 	if (ret)
 		return ret;
 
+#ifdef CONFIG_I2C_SLAVE
 	if (lpi2c_imx->slave)
 		lpi2c_imx_slave_init(lpi2c_imx);
+#endif
 
 	return 0;
 }

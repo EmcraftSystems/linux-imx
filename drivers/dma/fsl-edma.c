@@ -302,6 +302,15 @@ static struct fsl_edma_drvdata imx7ulp_data = {
 	.txirq_count = 16,
 };
 
+static struct fsl_edma_drvdata imxrt1050_data = {
+	.version = v3,
+	.dmamuxs = 1,
+	.has_dmaclk = true,
+	.setup_irq = fsl_edma2_irq_init,
+	.txirq_count = 16,
+	.mux_slot_mask = 0x7f,
+};
+
 static struct fsl_edma_drvdata s32v234_data = {
 	.version = v1,
 	.dmamuxs = DMAMUX_NR,
@@ -314,6 +323,7 @@ static const struct of_device_id fsl_edma_dt_ids[] = {
 	{ .compatible = "fsl,vf610-edma", .data = &vf610_data},
 	{ .compatible = "fsl,ls1028a-edma", .data = &ls1028a_data},
 	{ .compatible = "fsl,imx7ulp-edma", .data = &imx7ulp_data},
+	{ .compatible = "fsl,imxrt1050-edma", .data = &imxrt1050_data},
 	{ .compatible = "fsl,s32v234-edma", .data = &s32v234_data},
 	{ /* sentinel */ }
 };
