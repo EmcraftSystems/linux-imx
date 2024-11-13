@@ -350,7 +350,7 @@
 			status = "disabled";
 		};
 
-		lpspi1: lpspi@40394000 {
+		lpspi1: spi@40394000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
 			compatible = "fsl,imx7ulp-spi";
@@ -363,7 +363,7 @@
 			status = "disabled";
 		};
 
-		lpspi2: lpspi@40398000 {
+		lpspi2: spi@40398000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
 			compatible = "fsl,imx7ulp-spi";
@@ -376,7 +376,7 @@
 			status = "disabled";
 		};
 
-		lpspi3: lpspi@4039c000 {
+		lpspi3: spi@4039c000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
 			compatible = "fsl,imx7ulp-spi";
@@ -389,7 +389,7 @@
 			status = "disabled";
 		};
 
-		lpspi4: lpspi@403a0000 {
+		lpspi4: spi@403a0000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
 			compatible = "fsl,imx7ulp-spi";
