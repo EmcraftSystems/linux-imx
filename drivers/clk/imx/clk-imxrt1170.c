@@ -17,6 +17,8 @@
 
 static const char * const m7_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll_arm", "pll1_sys", "pll3_sys", "video_pll"};
+static const char * const m4_sels[] = {IMXRT1170_CLK_SRC_COMMON,
+"pll3_pfd3", "pll3_sys", "pll2_sys", "pll1_div5"};
 static const char * const bus_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll3_sys", "pll1_div5", "pll2_sys", "pll2_pfd3"};
 static const char * const bus_lpsr_sels[] = {IMXRT1170_CLK_SRC_COMMON,
@@ -88,6 +90,7 @@ struct imxrt1170_clk_root {
 
 static struct imxrt1170_clk_root clk_roots[] = {
 	{ IMXRT1170_CLK_ROOT_M7, "m7_root", m7_sels, 0, CLK_IS_CRITICAL },
+	{ IMXRT1170_CLK_ROOT_M4, "m4_root", m4_sels, 0x80, },
 	{ IMXRT1170_CLK_ROOT_BUS, "bus_root", bus_sels, (2 * 0x80), CLK_IS_CRITICAL },
 	{ IMXRT1170_CLK_ROOT_BUS_LPSR, "bus_lpsr_root", bus_lpsr_sels, (3 * 0x80), CLK_IS_CRITICAL },
 	{ IMXRT1170_CLK_ROOT_SEMC, "semc_root", semc_sels, (4 * 0x80), CLK_IS_CRITICAL },
@@ -116,6 +119,7 @@ struct imxrt1170_clk_ccgr {
 
 static struct imxrt1170_clk_ccgr clk_ccgrs[] = {
 	{ IMXRT1170_CLK_M7, "m7", "m7_root", 0x6000, CLK_IS_CRITICAL },
+	{ IMXRT1170_CLK_M4, "m4", "m4_root", (0x6000 + (1 * 0x20)), },
 	{ IMXRT1170_CLK_EDMA, "edma", "bus_root", (0x6000 + (20 * 0x20)) },
 	{ IMXRT1170_CLK_SEMC, "semc", "semc_root", (0x6000 + (33 * 0x20)), CLK_IS_CRITICAL },
 	{ IMXRT1170_CLK_GPT1, "gpt1", "gpt1_root", (0x6000 + (64 * 0x20)), },
