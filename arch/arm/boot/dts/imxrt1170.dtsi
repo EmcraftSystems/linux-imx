@@ -76,6 +76,11 @@
 			fsl,mux_mask = <0xf>;
 		};
 
+		lpsr_gpr: iomuxc_gpr_lpsr@40c0c000 {
+			compatible = "fsl,imxrt1170-iomuxc-lpsr-gpr", "syscon";
+			reg = <0x40c0c000 0x4000>;
+		};
+
 		iomuxc_snvs: iomuxc_snvs@40c94000 {
 			compatible = "fsl,imxrt1170-lpsr-iomuxc";
 			reg = <0x40c94000 0x4000>;
@@ -333,7 +338,6 @@
 			clocks = <&clks IMXRT1170_CLK_USB>;
 		};
 
-
 		usbotg2: usb2@4042c0000 {
 			compatible = "fsl,imxrt-usb", "fsl,imx6ul-usb";
 			reg = <0x4042c000 0x200>;
@@ -447,6 +451,19 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 			status = "disabled";
+		};
+
+		mu: mu@40c48000 {
+			compatible = "fsl,imx6sx-mu";
+			reg = <0x40c48000 0x1000>;
+			interrupts = <118>;
+			#mbox-cells = <2>;
+		};
+
+		src: reset-controller@40c04000 {
+			compatible = "syscon";
+			reg = <0x40c04000 0x4000>;
+			#reset-cells = <1>;
 		};
 
 		flexcan1: can@400c4000 {

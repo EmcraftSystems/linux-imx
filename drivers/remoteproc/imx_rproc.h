@@ -24,6 +24,8 @@ enum imx_rproc_method {
 	IMX_RPROC_SMC,
 	/* Through System Control Unit API */
 	IMX_RPROC_SCU_API,
+	/* Through syscon regmap without using src_start, src_stop, etc */
+	IMX_RPROC_MMIO_IMXRT1170,
 };
 
 struct imx_rproc_dcfg {
