@@ -5,7 +5,7 @@
  *
  * Copyright 2019-2020 NXP
  * Copyright 2020 Puresoftware Ltd.
- * Copyright 2023 Emcraft Systems.
+ * Copyright 2023-2025 Emcraft Systems.
  *
  * FlexSPI is a flexsible SPI host controller which supports two SPI
  * channels and up to 4 external devices. Each channel supports
@@ -340,6 +340,7 @@ struct nxp_fspi_devtype_data {
 	unsigned int txfifo;
 	unsigned int ahb_buf_size;
 	unsigned int ahb_buf_num;
+	unsigned int sdr_mode_max_rate;
 	unsigned int quirks;
 	unsigned int lut_num;
 	bool little_endian;
@@ -350,6 +351,7 @@ static struct nxp_fspi_devtype_data lx2160a_data = {
 	.txfifo = SZ_1K,        /* (128 * 64 bits)  */
 	.ahb_buf_size = SZ_2K,  /* (256 * 64 bits)  */
 	.ahb_buf_num = 8,
+	.sdr_mode_max_rate = 66000000, /* 66 MHz    */
 	.quirks = FSPI_QUIRK_DISABLE_DTR,
 	.lut_num = 32,
 	.little_endian = true,  /* little-endian    */
@@ -360,6 +362,7 @@ static struct nxp_fspi_devtype_data imx8mm_data = {
 	.txfifo = SZ_1K,        /* (128 * 64 bits)  */
 	.ahb_buf_size = SZ_2K,  /* (256 * 64 bits)  */
 	.ahb_buf_num = 8,
+	.sdr_mode_max_rate = 66000000, /* 66 MHz    */
 	.quirks = 0,
 	.lut_num = 32,
 	.little_endian = true,  /* little-endian    */
@@ -370,6 +373,7 @@ static struct nxp_fspi_devtype_data imx8qxp_data = {
 	.txfifo = SZ_1K,        /* (128 * 64 bits)  */
 	.ahb_buf_size = SZ_2K,  /* (256 * 64 bits)  */
 	.ahb_buf_num = 8,
+	.sdr_mode_max_rate = 66000000, /* 66 MHz    */
 	.quirks = 0,
 	.lut_num = 32,
 	.little_endian = true,  /* little-endian    */
@@ -380,6 +384,7 @@ static struct nxp_fspi_devtype_data imx8dxl_data = {
 	.txfifo = SZ_1K,        /* (128 * 64 bits)  */
 	.ahb_buf_size = SZ_2K,  /* (256 * 64 bits)  */
 	.ahb_buf_num = 8,
+	.sdr_mode_max_rate = 66000000, /* 66 MHz    */
 	.quirks = FSPI_QUIRK_USE_IP_ONLY,
 	.lut_num = 32,
 	.little_endian = true,  /* little-endian    */
@@ -389,6 +394,8 @@ static struct nxp_fspi_devtype_data imx8ulp_data = {
 	.rxfifo = SZ_512,       /* (64  * 64 bits)  */
 	.txfifo = SZ_1K,        /* (128 * 64 bits)  */
 	.ahb_buf_size = SZ_2K,  /* (256 * 64 bits)  */
+	.ahb_buf_num = 8,
+	.sdr_mode_max_rate = 66000000, /* 66 MHz    */
 	.quirks = 0,
 	.lut_num = 16,
 	.little_endian = true,  /* little-endian    */
@@ -399,7 +406,9 @@ static struct nxp_fspi_devtype_data imxrt1050_data = {
 	.txfifo = SZ_128,
 	.ahb_buf_size = SZ_1K,
 	.ahb_buf_num = 4,
+	.sdr_mode_max_rate = 60000000, /* 60 MHz    */
 	.quirks = 0,
+	.lut_num = 16,
 	.little_endian = true,  /* little-endian    */
 };
 
@@ -408,7 +417,9 @@ static struct nxp_fspi_devtype_data imxrt1170_data = {
 	.txfifo = SZ_256,
 	.ahb_buf_size = SZ_4K,
 	.ahb_buf_num = 8,
+	.sdr_mode_max_rate = 60000000, /* 60 MHz    */
 	.quirks = 0,
+	.lut_num = 16,
 	.little_endian = true,  /* little-endian    */
 };
 
@@ -728,9 +739,8 @@ static void nxp_fspi_select_rx_sample_clk_source(struct nxp_fspi *f,
 		reg &= ~FSPI_MCR0_RXCLKSRC(3);	/* select mode 0 */
 		fspi_writel(f, reg, f->iobase + FSPI_MCR0);
 		f->flags &= ~FSPI_RXCLKSRC_3;
-		f->support_max_rate = 66000000;
+		f->support_max_rate = f->devtype_data->sdr_mode_max_rate;
 	}
-
 }
 
 static void nxp_fspi_dll_calibration(struct nxp_fspi *f)
