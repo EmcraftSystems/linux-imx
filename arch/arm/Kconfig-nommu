@@ -64,3 +64,19 @@ config ARM_MPU
 
          If your CPU has an MPU then you should choose 'y' here unless you
          know that you do not want to use the MPU.
+
+config VIRT_ADDR_VALID_EXTEND
+	bool 'Extend the valid address range'
+	help
+	  This option allows defining additional area outside of SDRAM, such as on-chip-ram.
+	  Using this option is useful for the targets  without MMU.
+
+config VIRT_ADDR_EXTEND_START
+	hex 'Starting address of extended area' if VIRT_ADDR_VALID_EXTEND
+	help
+	  Starting address of the extended area.
+
+config VIRT_ADDR_EXTEND_SIZE
+	hex 'Size of extended area' if VIRT_ADDR_VALID_EXTEND
+	help
+	  Size of the extended area.
