@@ -29,7 +29,7 @@ static const char * const usdhc1_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll2_pfd2", "pll2_pfd0", "pll1_div5", "pll_arm"};
 static const char * const semc_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll1_div5", "pll2_sys", "pll2_pfd1", "pll3_pfd0"};
-static const char * const enet1_sels[] = {IMXRT1170_CLK_SRC_COMMON,
+static const char * const enet_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll1_div2", "audio_pll", "pll1_div5", "pll2_pfd1"};
 static const char * const lpi2c1_4_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll3_div2", "pll1_div5", "pll2_sys", "pll2_pfd3"};
@@ -43,6 +43,8 @@ static const char * const lpspi1_4_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll3_pfd2", "pll1_div5", "pll2_sys", "pll2_pfd3"};
 static const char * const lpspi5_6_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll3_pfd3", "pll3_sys", "pll3_pfd2", "pll1_div5"};
+static const char * const flexspi_sels[] = {IMXRT1170_CLK_SRC_COMMON,
+"pll3_pfd0", "pll2_sys", "pll2_pfd2", "pll3_sys"};
 
 struct clk_hw *imxrt1170_clk_pll_div_out_composite(const char *name, const char *parent_name,
 						void __iomem *reg, int div_factor, int gate_bit, unsigned long flags)
@@ -96,6 +98,8 @@ static struct imxrt1170_clk_root clk_roots[] = {
 	{ IMXRT1170_CLK_ROOT_BUS_LPSR, "bus_lpsr_root", bus_lpsr_sels, (3 * 0x80), CLK_IS_CRITICAL },
 	{ IMXRT1170_CLK_ROOT_SEMC, "semc_root", semc_sels, (4 * 0x80), CLK_IS_CRITICAL },
 	{ IMXRT1170_CLK_ROOT_GPT1, "gpt1_root", gpt1_sels, (14 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_FLEXSPI1, "flexspi1_root", flexspi_sels, (20 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_FLEXSPI2, "flexspi2_root", flexspi_sels, (21 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_LPUART1, "lpuart1_root", lpuart1_sels, (25 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_LPI2C1, "lpi2c1_root", lpi2c1_4_sels, (37 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_LPI2C2, "lpi2c2_root", lpi2c1_4_sels, (38 * 0x80), },
@@ -110,6 +114,8 @@ static struct imxrt1170_clk_root clk_roots[] = {
 	{ IMXRT1170_CLK_ROOT_LPSPI5, "lpspi5_root", lpspi5_6_sels, (47 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_LPSPI6, "lpspi6_root", lpspi5_6_sels, (48 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_ENET1, "enet1_root", enet1_sels, (51 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_ENET1, "enet1_root", enet_sels, (51 * 0x80), },
+	{ IMXRT1170_CLK_ROOT_ENET2, "enet2_root", enet_sels, (52 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_USDHC1, "usdhc1_root", usdhc1_sels, (58 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_ELCDIF, "elcdif_root", elcdif_sels, (69 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_MIPI_REF, "mipi_ref_root", mipi_dsi_sels, (71 * 0x80), },
@@ -129,6 +135,8 @@ static struct imxrt1170_clk_ccgr clk_ccgrs[] = {
 	{ IMXRT1170_CLK_EDMA, "edma", "bus_root", (0x6000 + (20 * 0x20)) },
 	{ IMXRT1170_CLK_SEMC, "semc", "semc_root", (0x6000 + (33 * 0x20)), CLK_IS_CRITICAL },
 	{ IMXRT1170_CLK_GPT1, "gpt1", "gpt1_root", (0x6000 + (64 * 0x20)), },
+	{ IMXRT1170_CLK_FLEXSPI1, "flexspi1", "flexspi1_root", (0x6000 + (28 * 0x20)), },
+	{ IMXRT1170_CLK_FLEXSPI2, "flexspi2", "flexspi2_root", (0x6000 + (29 * 0x20)), },
 	{ IMXRT1170_CLK_LPUART1, "lpuart1", "lpuart1_root", (0x6000 + (86 * 0x20)), },
 	{ IMXRT1170_CLK_LPI2C1, "lpi2c1", "lpi2c1_root", (0x6000 + (98 * 0x20)), },
 	{ IMXRT1170_CLK_LPI2C2, "lpi2c2", "lpi2c2_root", (0x6000 + (99 * 0x20)), },
@@ -143,6 +151,7 @@ static struct imxrt1170_clk_ccgr clk_ccgrs[] = {
 	{ IMXRT1170_CLK_LPSPI5, "lpspi5", "lpspi5_root", (0x6000 + (108 * 0x20)), },
 	{ IMXRT1170_CLK_LPSPI6, "lpspi6", "lpspi6_root", (0x6000 + (109 * 0x20)), },
 	{ IMXRT1170_CLK_ENET1, "enet1", "enet1_root", (0x6000 + (112 * 0x20)), },
+	{ IMXRT1170_CLK_ENET2, "enet2", "enet2_root", (0x6000 + (113 * 0x20)), },
 	{ IMXRT1170_CLK_USB, "usb", "bus_root", (0x6000 + (115 * 0x20)), },
 	{ IMXRT1170_CLK_USDHC1, "usdhc1", "usdhc1_root", (0x6000 + (117 * 0x20)), },
 	{ IMXRT1170_CLK_ELCDIF, "elcdif", "elcdif_root", (0x6000 + (129 * 0x20)), },
