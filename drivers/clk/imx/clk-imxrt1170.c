@@ -113,7 +113,6 @@ static struct imxrt1170_clk_root clk_roots[] = {
 	{ IMXRT1170_CLK_ROOT_LPSPI4, "lpspi4_root", lpspi1_4_sels, (46 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_LPSPI5, "lpspi5_root", lpspi5_6_sels, (47 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_LPSPI6, "lpspi6_root", lpspi5_6_sels, (48 * 0x80), },
-	{ IMXRT1170_CLK_ROOT_ENET1, "enet1_root", enet1_sels, (51 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_ENET1, "enet1_root", enet_sels, (51 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_ENET2, "enet2_root", enet_sels, (52 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_USDHC1, "usdhc1_root", usdhc1_sels, (58 * 0x80), },
