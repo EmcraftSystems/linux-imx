@@ -56,6 +56,12 @@
 		can2 = &flexcan3;
 		adc1 = &adc1;
 		adc2 = &adc2;
+		i2c0 = &lpi2c1;
+		i2c1 = &lpi2c2;
+		i2c2 = &lpi2c3;
+		i2c3 = &lpi2c4;
+		i2c4 = &lpi2c5;
+		i2c5 = &lpi2c6;
 	};
 
 	soc {
@@ -140,6 +146,16 @@
 			compatible = "fsl,mvf600-fec";
 			reg = <0x40424000 0x4000>;
 			interrupts = <137>;
+
+			fsl,num-tx-queues=<1>;
+			fsl,num-rx-queues=<1>;
+			status = "disabled";
+                };
+
+		fec_1g: ethernet@40420000 {
+			compatible = "fsl,imxrt-1g-fec";
+			reg = <0x40420000 0x4000>;
+			interrupts = <139>, <140>, <141>;
 
 			fsl,num-tx-queues=<1>;
 			fsl,num-rx-queues=<1>;
@@ -492,12 +508,28 @@
                 };
 
 		flexspi1: spi@400cc000 {
-			/* TBD */
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "nxp,imxrt1170-fspi";
+			reg = <0x400cc000 0x4000>, <0x30000000 0x40000000>;
+			reg-names = "fspi_base", "fspi_mmap";
+			interrupts = <130>;
+			clocks = <&clks IMXRT1170_CLK_ROOT_FLEXSPI1>,
+                                 <&clks IMXRT1170_CLK_FLEXSPI1>;
+			clock-names = "fspi", "fspi_en";
 			status = "disabled";
 		};
 
 		flexspi2: spi@400d0000 {
-			/* TBD */
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "nxp,imxrt1170-fspi";
+			reg = <0x400d0000 0x4000>, <0x60000000 0x40000000>;
+			reg-names = "fspi_base", "fspi_mmap";
+			interrupts = <131>;
+			clocks = <&clks IMXRT1170_CLK_ROOT_FLEXSPI2>,
+                                 <&clks IMXRT1170_CLK_FLEXSPI2>;
+			clock-names = "fspi", "fspi_en";
 			status = "disabled";
 		};
 
