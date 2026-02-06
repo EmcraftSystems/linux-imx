@@ -95,6 +95,12 @@ static struct mipi_dsi_match_lcd mipi_dsi_lcd_db[] = {
 	 {mipid_hx8394_get_lcd_videomode, mipid_hx8394_lcd_setup}
 	},
 #endif
+#ifdef CONFIG_FB_MXC_RPI_7INCH_LCD
+	{
+	 "RPI-7INCH-LCD",
+	 {mipid_rpi_get_lcd_videomode, mipid_rpi_lcd_setup}
+	},
+#endif
 	{
 	"", {NULL, NULL}
 	}
@@ -373,6 +379,7 @@ static void mipi_dsi_set_mode(struct mipi_dsi_info *mipi_dsi,
 
 	pkt_control = readl(mipi_dsi->mmio_base + HOST_PKT_CONTROL);
 
+	pr_err("%s %i mode %i\n", __func__, __LINE__, mode);
 	switch (mode) {
 	case DSI_LP_MODE:
 		writel(0x1, mipi_dsi->mmio_base + HOST_CFG_NONCONTINUOUS_CLK);
@@ -894,6 +901,8 @@ static int mipi_dsi_enable(struct mxc_dispdrv_handle *disp,
 	int ret;
 	struct mipi_dsi_info *mipi_dsi = mxc_dispdrv_getdata(disp);
 
+	pr_err("%s %i\n", __func__, __LINE__);
+
 #ifndef CONFIG_FB_IMX64
 	if (!mipi_dsi->dsi_power_on)
 		pm_runtime_get_sync(&mipi_dsi->pdev->dev);
@@ -1067,6 +1076,14 @@ static int mipi_dsi_pkt_write(struct mipi_dsi_info *mipi_dsi,
 	struct platform_device *pdev = mipi_dsi->pdev;
 	const uint8_t *data = (const uint8_t *)buf;
 
+	pr_err("%s %i len %d %x %x %x %x %x %x\n", __func__, __LINE__,
+			len, (int)*((char *)buf + 0),
+			(int)*((char *)buf + 1),
+			(int)*((char *)buf + 2),
+			(int)*((char *)buf + 3),
+			(int)*((char *)buf + 4),
+			(int)*((char *)buf + 5));
+
 	if (len == 0)
 		/* handle generic long write command */
 		mipi_dsi_wr_tx_header(mipi_dsi, data_type, data[0], data[1], DSI_LP_MODE, 0);
@@ -1118,7 +1135,7 @@ static int mipi_dsi_pkt_read(struct mipi_dsi_info *mipi_dsi,
 		}
 
 		rx_hdr = mipi_dsi_rd_rx_header(mipi_dsi);
-		dev_dbg(&pdev->dev, "rx: rx_hdr = 0x%x, data type = 0x%x, word_count = 0x%x\n",
+		dev_err(&pdev->dev, "rx: rx_hdr = 0x%x, data type = 0x%x, word_count = 0x%x\n",
 				     rx_hdr, (rx_hdr >> 16) & 0x3f, rx_hdr & 0xffff);
 
 		buf[0] = rx_hdr & 0xff;
@@ -1306,6 +1323,8 @@ static int mipi_dsi_probe(struct platform_device *pdev)
 	u32 vmode_index;
 	uint32_t phy_ref_clkfreq;
 	const struct mipi_dsi_soc_data *sdata = of_device_get_match_data(&pdev->dev);
+
+	pr_err("%s %i\n", __func__, __LINE__);
 
 	mipi_dsi = devm_kzalloc(&pdev->dev, sizeof(*mipi_dsi), GFP_KERNEL);
 	if (!mipi_dsi)
