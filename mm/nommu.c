@@ -776,6 +776,16 @@ static int validate_mmap_request(struct file *file,
 			 * shared with the backing device */
 			if (prot & PROT_WRITE)
 				capabilities &= ~NOMMU_MAP_DIRECT;
+
+			/* determine_vm_flags() refuses VM_MAYOVERLAY for a
+			 * ptraced task so a ptracer-installed breakpoint cannot
+			 * corrupt the backing file. Drop NOMMU_MAP_DIRECT here
+			 * to match, otherwise do_mmap_private() calls ->mmap on
+			 * tmpfs/ramfs/romfs/cramfs (which succeeds), then trips
+			 * WARN_ON_ONCE because the resulting vm_flags are not a
+			 * shared mapping. */
+			if (current->ptrace)
+				capabilities &= ~NOMMU_MAP_DIRECT;
 		}
 
 		if (capabilities & NOMMU_MAP_DIRECT) {
