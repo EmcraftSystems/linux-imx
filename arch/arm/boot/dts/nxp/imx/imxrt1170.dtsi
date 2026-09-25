@@ -120,6 +120,15 @@
 			#clock-cells = <1>;
 			clocks = <&osc>, <&rcosc16M>;
 			clock-names = "osc", "rcosc16M";
+			/*
+			 * GPT1 is a TIMER_OF_DECLARE timer, so assigned-clocks on its
+			 * own node are never applied. Set its root here, before
+			 * timer_probe(), so timekeeping does not depend on the root the
+			 * bootloader left (the ROM default is an RC oscillator).
+			 */
+			assigned-clocks = <&clks IMXRT1170_CLK_ROOT_GPT1>;
+			assigned-clock-parents = <&clks IMXRT1170_CLK_OSC>;
+			assigned-clock-rates = <24000000>;
 		};
 
 		edma0: dma-controller@40080000 {
