@@ -43,6 +43,25 @@
 #define WHITE_LIST_SHIFT	16
 #endif
 
+#if defined (CONFIG_CLK_IMXRT1170)
+#define RT1170_STATUS0_OFFSET	0x20
+#define RT1170_CHANGING_SHIFT	31
+#define RT1170_TIMEOUT_US	50U
+
+/* SLICE_BUSY can lag the write; CHANGING spans the whole update. */
+/* A change pends while its input is stopped, so a timeout is not an error. */
+static int imx93_clk_composite_wait_ready(struct clk_hw *hw, void __iomem *reg)
+{
+	u32 val;
+
+	if (readl_poll_timeout_atomic(reg + RT1170_STATUS0_OFFSET, val,
+				      !(val & BIT(RT1170_CHANGING_SHIFT)),
+				      1, RT1170_TIMEOUT_US))
+		pr_debug("Slice[%s] update pending\n", clk_hw_get_name(hw));
+
+	return 0;
+}
+#else
 static int imx93_clk_composite_wait_ready(struct clk_hw *hw, void __iomem *reg)
 {
 	int ret;
@@ -55,6 +74,7 @@ static int imx93_clk_composite_wait_ready(struct clk_hw *hw, void __iomem *reg)
 
 	return ret;
 }
+#endif
 
 static void imx93_clk_composite_gate_endisable(struct clk_hw *hw, int enable)
 {
