@@ -579,7 +579,7 @@ static void jent_gen_entropy(struct rand_data *ec)
 	while (!jent_health_failure(ec)) {
 		static unsigned long n, ns, z1, z2, z3;
 		int st = jent_measure_jitter(ec, NULL);
-		writel(++n, (void __iomem *)0x40c9010c); ns += st; z1 += !ec->dbg_d1; z2 += !ec->dbg_d2; z3 += !ec->dbg_d3;
+		n++; ns += st; z1 += !ec->dbg_d1; z2 += !ec->dbg_d2; z3 += !ec->dbg_d3;
 		if (n <= 8 || !(n & 4095))
 			pr_info("jent-dbg: gen n=%lu stuck=%lu z=%lu/%lu/%lu k=%u t=%llu d1=%llu d2=%lld d3=%lld acc=%llu kt=%llu\n",
 				n, ns, z1, z2, z3, k, ec->dbg_t, ec->dbg_d1, (s64)ec->dbg_d2, (s64)ec->dbg_d3, ec->dbg_acc, ktime_get_ns());

@@ -2484,9 +2484,40 @@ static void lpuart_console_putchar(struct uart_port *port, unsigned char ch)
 	writeb(ch, port->membase + UARTDR);
 }
 
+/* DEBUG IMXRT-50: bounded TDRE wait; on a stall, record it in SNVS LPGPR2-3 and drop output. */
+extern u32 jent_dbg_ticks;
+static bool lpuart_dbg_stalled;
+static u32 lpuart_dbg_seen;
+
 static void lpuart32_console_putchar(struct uart_port *port, unsigned char ch)
 {
-	lpuart32_wait_bit_set(port, UARTSTAT, UARTSTAT_TDRE);
+	unsigned long n = 0;
+
+	if (!lpuart_dbg_seen) {
+		lpuart_dbg_seen = 1;
+		writel(0, (void __iomem *)0x40c90108);
+		writel(0, (void __iomem *)0x40c9010c);
+	}
+	while (!(lpuart32_read(port, UARTSTAT) & UARTSTAT_TDRE)) {
+		if (lpuart_dbg_stalled || ++n == 2000000) {
+			if (!lpuart_dbg_stalled) {
+				u32 root = readl((void __iomem *)0x40cc0c80);
+
+				writel(lpuart32_read(port, UARTSTAT), (void __iomem *)0x40c90108);
+				writel((jent_dbg_ticks & 0xffff) << 16 |
+				       ((lpuart32_read(port, UARTCTRL) >> 16) & 0xff) << 8 |
+				       ((root >> 24) & 1) << 3 | ((root >> 8) & 7),
+				       (void __iomem *)0x40c9010c);
+				lpuart_dbg_stalled = true;
+			}
+			return;
+		}
+		cpu_relax();
+	}
+	if (lpuart_dbg_stalled) {
+		lpuart_dbg_stalled = false;
+		writel(readl((void __iomem *)0x40c9010c) | 0x80, (void __iomem *)0x40c9010c);
+	}
 	lpuart32_write(port, ch, UARTDATA);
 }
 

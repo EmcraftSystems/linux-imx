@@ -51,7 +51,7 @@
 
 /* DEBUG IMXRT-50: breadcrumbs in SNVS LPGPR0-2 (0x40c90100), which survive a reset. */
 static struct hrtimer jent_dbg_hrt;
-static u32 jent_dbg_ticks;
+u32 jent_dbg_ticks;
 
 static enum hrtimer_restart jent_dbg_fn(struct hrtimer *t)
 {
@@ -61,7 +61,6 @@ static enum hrtimer_restart jent_dbg_fn(struct hrtimer *t)
 	writel(++jent_dbg_ticks, g);
 	if (regs) {
 		writel(regs->ARM_pc, g + 4);
-		writel(regs->ARM_lr, g + 8);
 	} else {
 		writel(0xdead0000, g + 4);
 	}
@@ -363,8 +362,6 @@ static int __init jent_mod_init(void)
 
 	writel(0, (void __iomem *)0x40c90100);
 	writel(0, (void __iomem *)0x40c90104);
-	writel(0, (void __iomem *)0x40c90108);
-	writel(0, (void __iomem *)0x40c9010c);
 	hrtimer_init(&jent_dbg_hrt, CLOCK_MONOTONIC, HRTIMER_MODE_REL_HARD);
 	jent_dbg_hrt.function = jent_dbg_fn;
 	hrtimer_start(&jent_dbg_hrt, ms_to_ktime(10), HRTIMER_MODE_REL_HARD);
