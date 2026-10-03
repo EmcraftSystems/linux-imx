@@ -338,7 +338,10 @@ static int __init jent_mod_init(void)
 
 	jent_testing_init();
 
+	pr_info("jent-dbg: alloc\n");
 	tfm = crypto_alloc_shash(JENT_CONDITIONING_HASH, 0, 0);
+	pr_info("jent-dbg: alloc -> %ld %s\n", IS_ERR(tfm) ? PTR_ERR(tfm) : 0L,
+		IS_ERR(tfm) ? "" : crypto_shash_driver_name(tfm));
 	if (IS_ERR(tfm)) {
 		jent_testing_exit();
 		return PTR_ERR(tfm);
@@ -358,7 +361,10 @@ static int __init jent_mod_init(void)
 		pr_info("jitterentropy: Initialization failed with host not compliant with requirements: %d\n", ret);
 		return -EFAULT;
 	}
-	return crypto_register_rng(&jent_alg);
+	pr_info("jent-dbg: register\n");
+	ret = crypto_register_rng(&jent_alg);
+	pr_info("jent-dbg: register -> %d\n", ret);
+	return ret;
 }
 
 static void __exit jent_mod_exit(void)

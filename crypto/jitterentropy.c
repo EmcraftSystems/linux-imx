@@ -62,6 +62,7 @@ typedef unsigned char		u8;
 
 /* The entropy pool */
 struct rand_data {
+	__u64 dbg_d1, dbg_d2, dbg_d3, dbg_t, dbg_acc;
 	/* SHA3-256 is used as conditioner */
 #define DATA_SIZE_BITS 256
 	/* all data values that are vital to maintain the security
@@ -148,6 +149,8 @@ struct rand_data {
 #include <linux/fips.h>
 #include <linux/minmax.h>
 #include "jitterentropy.h"
+#include <linux/printk.h>
+#include <linux/timekeeping.h>
 
 /***************************************************************************
  * Adaptive Proportion Test
@@ -333,6 +336,7 @@ static int jent_stuck(struct rand_data *ec, __u64 current_delta)
 	 */
 	jent_apt_insert(ec, current_delta);
 
+	ec->dbg_d1 = current_delta; ec->dbg_d2 = delta2; ec->dbg_d3 = delta3;
 	if (!current_delta || !delta2 || !delta3) {
 		/* RCT with a stuck bit */
 		jent_rct_insert(ec, 1);
@@ -474,6 +478,7 @@ static void jent_memaccess(struct rand_data *ec, __u64 loop_cnt)
 
 	if (NULL == ec || NULL == ec->mem)
 		return;
+	ec->dbg_acc = acc_loop_cnt;
 	wrap = ec->memblocksize * ec->memblocks;
 
 	/*
@@ -531,6 +536,7 @@ static int jent_measure_jitter(struct rand_data *ec, __u64 *ret_current_delta)
 	 * invocation to measure the timing variations
 	 */
 	jent_get_nstime(&time);
+	ec->dbg_t = time;
 	current_delta = jent_delta(ec->prev_time, time);
 	ec->prev_time = time;
 
@@ -538,8 +544,13 @@ static int jent_measure_jitter(struct rand_data *ec, __u64 *ret_current_delta)
 	stuck = jent_stuck(ec, current_delta);
 
 	/* Now call the next noise sources which also injects the data */
-	if (jent_condition_data(ec, current_delta, stuck))
-		stuck = 1;
+	{
+		int hret = jent_condition_data(ec, current_delta, stuck);
+		if (hret) {
+			pr_info_ratelimited("jent-dbg: hash err %d\n", hret);
+			stuck = 1;
+		}
+	}
 
 	/* return the raw entropy value */
 	if (ret_current_delta)
@@ -565,8 +576,19 @@ static void jent_gen_entropy(struct rand_data *ec)
 	jent_measure_jitter(ec, NULL);
 
 	while (!jent_health_failure(ec)) {
+		static unsigned long n, ns, z1, z2, z3;
+		int st = jent_measure_jitter(ec, NULL);
+		n++; ns += st; z1 += !ec->dbg_d1; z2 += !ec->dbg_d2; z3 += !ec->dbg_d3;
+		if (n <= 8 || !(n & 4095))
+			pr_info("jent-dbg: gen n=%lu stuck=%lu z=%lu/%lu/%lu k=%u t=%llu d1=%llu d2=%lld d3=%lld acc=%llu kt=%llu\n",
+				n, ns, z1, z2, z3, k, ec->dbg_t, ec->dbg_d1, (s64)ec->dbg_d2, (s64)ec->dbg_d3, ec->dbg_acc, ktime_get_ns());
+		if (n <= 8 || !(n & 4095)) {
+			__u64 t;
+			jent_get_nstime(&t);
+			ec->prev_time = t;
+		}
 		/* If a stuck measurement is received, repeat measurement */
-		if (jent_measure_jitter(ec, NULL))
+		if (st)
 			continue;
 
 		/*
@@ -576,6 +598,7 @@ static void jent_gen_entropy(struct rand_data *ec)
 		if (++k >= ((DATA_SIZE_BITS + safety_factor) * ec->osr))
 			break;
 	}
+	pr_info("jent-dbg: gen done k=%u kt=%llu\n", k, ktime_get_ns());
 }
 
 /*
@@ -716,6 +739,7 @@ int jent_entropy_init(unsigned int osr, unsigned int flags, void *hash_state,
 	int i, time_backwards = 0, ret = 0, ec_free = 0;
 	unsigned int health_test_result;
 
+	pr_info("jent-dbg: init enter kt=%llu\n", ktime_get_ns());
 	if (!ec) {
 		ec = jent_entropy_collector_alloc(osr, flags, hash_state);
 		if (!ec)
@@ -764,6 +788,8 @@ int jent_entropy_init(unsigned int osr, unsigned int flags, void *hash_state,
 
 		/* Invoke core entropy collection logic */
 		jent_measure_jitter(ec, &delta);
+		if (i < 4 || !(i % 128))
+			pr_info("jent-dbg: test i=%d delta=%llu kt=%llu\n", i, delta, ktime_get_ns());
 		end_time = ec->prev_time;
 		start_time = ec->prev_time - delta;
 
@@ -819,6 +845,7 @@ int jent_entropy_init(unsigned int osr, unsigned int flags, void *hash_state,
 	}
 
 out:
+	pr_info("jent-dbg: init out ret=%d kt=%llu\n", ret, ktime_get_ns());
 	if (ec_free)
 		jent_entropy_collector_free(ec);
 
