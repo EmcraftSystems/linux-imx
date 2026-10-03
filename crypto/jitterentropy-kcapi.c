@@ -45,6 +45,29 @@
 #include <linux/slab.h>
 #include <linux/time.h>
 #include <crypto/internal/rng.h>
+#include <linux/hrtimer.h>
+#include <linux/io.h>
+#include <asm/irq_regs.h>
+
+/* DEBUG IMXRT-50: breadcrumbs in SNVS LPGPR0-2 (0x40c90100), which survive a reset. */
+static struct hrtimer jent_dbg_hrt;
+static u32 jent_dbg_ticks;
+
+static enum hrtimer_restart jent_dbg_fn(struct hrtimer *t)
+{
+	struct pt_regs *regs = get_irq_regs();
+	void __iomem *g = (void __iomem *)0x40c90100;
+
+	writel(++jent_dbg_ticks, g);
+	if (regs) {
+		writel(regs->ARM_pc, g + 4);
+		writel(regs->ARM_lr, g + 8);
+	} else {
+		writel(0xdead0000, g + 4);
+	}
+	hrtimer_forward_now(t, ms_to_ktime(10));
+	return HRTIMER_RESTART;
+}
 
 #include "jitterentropy.h"
 
@@ -337,6 +360,15 @@ static int __init jent_mod_init(void)
 	int ret = 0;
 
 	jent_testing_init();
+
+	writel(0, (void __iomem *)0x40c90100);
+	writel(0, (void __iomem *)0x40c90104);
+	writel(0, (void __iomem *)0x40c90108);
+	writel(0, (void __iomem *)0x40c9010c);
+	hrtimer_init(&jent_dbg_hrt, CLOCK_MONOTONIC, HRTIMER_MODE_REL_HARD);
+	jent_dbg_hrt.function = jent_dbg_fn;
+	hrtimer_start(&jent_dbg_hrt, ms_to_ktime(10), HRTIMER_MODE_REL_HARD);
+	pr_info("jent-dbg: gpr probe %08x\n", readl((void __iomem *)0x40c9010c) | 0);
 
 	pr_info("jent-dbg: alloc\n");
 	tfm = crypto_alloc_shash(JENT_CONDITIONING_HASH, 0, 0);
