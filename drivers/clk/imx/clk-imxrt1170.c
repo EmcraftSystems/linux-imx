@@ -41,10 +41,8 @@ static const char * const mipi_dsi_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll2_sys", "pll2_pfd0", "pll3_pfd0", "video_pll"};
 static const char * const flexspi_sels[] = {IMXRT1170_CLK_SRC_COMMON,
 "pll3_pfd0", "pll2_sys", "pll2_pfd2", "pll3_sys"};
-static const char * const adc1_sels[] = {IMXRT1170_CLK_SRC_COMMON,
-"pll3_div2", "pll1_div5", "pll3_pfd2", "pll3_pfd3"};
-static const char * const adc2_sels[] = {IMXRT1170_CLK_SRC_COMMON,
-"pll3_div2", "pll1_div5", "pll3_pfd2", "pll3_pfd3"};
+static const char * const adc_sels[] = {IMXRT1170_CLK_SRC_COMMON,
+"pll3_div2", "pll1_div5", "pll2_sys", "pll2_pfd3"};
 
 struct clk_hw *imxrt1170_clk_pll_div_out_composite(const char *name, const char *parent_name,
 						void __iomem *reg, int div_factor, int gate_bit, unsigned long flags)
@@ -97,8 +95,8 @@ static struct imxrt1170_clk_root clk_roots[] = {
 	{ IMXRT1170_CLK_ROOT_BUS, "bus_root", bus_sels, (2 * 0x80), CLK_IS_CRITICAL },
 	{ IMXRT1170_CLK_ROOT_BUS_LPSR, "bus_lpsr_root", bus_lpsr_sels, (3 * 0x80), CLK_IS_CRITICAL },
 	{ IMXRT1170_CLK_ROOT_SEMC, "semc_root", semc_sels, (4 * 0x80), CLK_IS_CRITICAL },
-	{ IMXRT1170_CLK_ROOT_ADC1, "adc1_root", adc1_sels, (9 * 0x80),  },
-	{ IMXRT1170_CLK_ROOT_ADC2, "adc2_root", adc2_sels, (10 * 0x80),  },
+	{ IMXRT1170_CLK_ROOT_ADC1, "adc1_root", adc_sels, (9 * 0x80),  },
+	{ IMXRT1170_CLK_ROOT_ADC2, "adc2_root", adc_sels, (10 * 0x80),  },
 	{ IMXRT1170_CLK_ROOT_GPT1, "gpt1_root", gpt1_sels, (14 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_FLEXSPI1, "flexspi1_root", flexspi_sels, (20 * 0x80), },
 	{ IMXRT1170_CLK_ROOT_FLEXSPI2, "flexspi2_root", flexspi_sels, (21 * 0x80), },
