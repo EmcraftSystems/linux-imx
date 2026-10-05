@@ -389,6 +389,8 @@
 				 <&clks IMXRT1050_CLK_CAN2_SERIAL>;
 			clock-names = "ipg", "per";
 			fsl,stop-mode = <&gpr 0x10 2>;
+			status = "disabled";
+		};
 
 		flexspi1: spi@402a8000 {
 			#address-cells = <1>;
