@@ -400,7 +400,7 @@ static inline unsigned long __virt_to_idmap(unsigned long x)
 					&& pfn_valid(virt_to_pfn(kaddr))) || \
 				(((unsigned long)(kaddr) >= CONFIG_VIRT_ADDR_EXTEND_START) && \
 					((unsigned long)(kaddr) < CONFIG_VIRT_ADDR_EXTEND_START + CONFIG_VIRT_ADDR_EXTEND_SIZE)))
-#endif /* ifndef CONFIG_SOC_IMXRT */
+#endif /* CONFIG_VIRT_ADDR_VALID_EXTEND */
 
 #endif
 
