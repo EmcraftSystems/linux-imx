@@ -26,6 +26,8 @@ enum imx_rproc_method {
 	IMX_RPROC_SCU_API,
 	/* Through System Manager */
 	IMX_RPROC_SM,
+	/* Through syscon regmap without using src_start, src_stop, etc */
+	IMX_RPROC_MMIO_IMXRT1170,
 };
 
 /* dcfg flags */

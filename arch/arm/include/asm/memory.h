@@ -388,8 +388,19 @@ static inline unsigned long __virt_to_idmap(unsigned long x)
 #define ARCH_PFN_OFFSET		PHYS_PFN_OFFSET
 
 #define virt_to_page(kaddr)	pfn_to_page(virt_to_pfn(kaddr))
+
+#ifndef CONFIG_VIRT_ADDR_VALID_EXTEND
 #define virt_addr_valid(kaddr)	(((unsigned long)(kaddr) >= PAGE_OFFSET && (unsigned long)(kaddr) < (unsigned long)high_memory) \
 					&& pfn_valid(virt_to_pfn(kaddr)))
+#else
+/*
+ * Add extended memory region for checking
+ */
+#define virt_addr_valid(kaddr)	((((unsigned long)(kaddr) >= PAGE_OFFSET && (unsigned long)(kaddr) < (unsigned long)high_memory) \
+					&& pfn_valid(virt_to_pfn(kaddr))) || \
+				(((unsigned long)(kaddr) >= CONFIG_VIRT_ADDR_EXTEND_START) && \
+					((unsigned long)(kaddr) < CONFIG_VIRT_ADDR_EXTEND_START + CONFIG_VIRT_ADDR_EXTEND_SIZE)))
+#endif /* ifndef CONFIG_SOC_IMXRT */
 
 #endif
 
