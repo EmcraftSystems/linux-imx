@@ -109,6 +109,7 @@ struct imx_rproc {
 	struct device			*dev;
 	struct regmap			*regmap;
 	struct regmap			*gpr;
+	struct regmap			*imxrt1170_lpsr_gpr;
 	struct rproc			*rproc;
 	const struct imx_rproc_dcfg	*dcfg;
 	struct imx_rproc_mem		mem[IMX_RPROC_MEM_MAX];
@@ -360,6 +361,15 @@ static const struct imx_rproc_dcfg imx_rproc_cfg_imx8mn_mmio = {
 	.method		= IMX_RPROC_MMIO,
 };
 
+static const struct imx_rproc_att imx_rproc_att_imxrt1170[] = {
+	/* dev addr , sys addr  , size      , flags */
+	/* dev addr: TCM M4 (LMEM RAM_L + LMEM RAM_U),
+	 * sys addr: OCRAM M4 (LMEM 128KB SRAM_L + 128KB SRAM_U backdoor),
+	 * size: size of OCRAM M4
+	 */
+	{ 0x1FFE0000, 0x20200000, 0x00040000, ATT_OWN | ATT_IOMEM },
+};
+
 static const struct imx_rproc_dcfg imx_rproc_cfg_imx8mn = {
 	.att		= imx_rproc_att_imx8mn,
 	.att_size	= ARRAY_SIZE(imx_rproc_att_imx8mn),
@@ -445,6 +455,45 @@ static const struct imx_rproc_dcfg imx_rproc_cfg_imx94_m33s = {
 	.method		= IMX_RPROC_SM,
 };
 
+static const struct imx_rproc_dcfg imx_rproc_cfg_imxrt1170 = {
+	.att		= imx_rproc_att_imxrt1170,
+	.att_size	= ARRAY_SIZE(imx_rproc_att_imxrt1170),
+	.method		= IMX_RPROC_MMIO_IMXRT1170,
+};
+
+#define IOMUXC_LPSR_GPR_GPR0_CM4_INIT_VTOR_LOW_MASK	0xFFF8
+#define IOMUXC_LPSR_GPR_GPR0_CM4_INIT_VTOR_LOW_SHIFT	0x3
+#define IMXRT1170_SRC_SCR				0x0
+#define IMXRT1170_SRC_CTRL_M4CORE			0x284
+#define SRC_SCR_BT_RELEASE_M4				0x1
+#define SRC_CTRL_SW_RESET				0x1
+#define IMXRT1170_IOMUXC_LPSR_GPR0			0x0
+#define IMXRT1170_IOMUXC_LPSR_GPR1			0x4
+
+/* CM4_INIT_VTOR_LOW - CM4 Vector table offset value lower bits out of reset */
+#define IOMUXC_LPSR_GPR_GPR0_CM4_INIT_VTOR_LOW(x)	(((u32)(((u32)(x)) << \
+							IOMUXC_LPSR_GPR_GPR0_CM4_INIT_VTOR_LOW_SHIFT)) & \
+							IOMUXC_LPSR_GPR_GPR0_CM4_INIT_VTOR_LOW_MASK)
+
+#define IOMUXC_LPSR_GPR_GPR1_CM4_INIT_VTOR_HIGH_MASK	0xFFFF
+#define IOMUXC_LPSR_GPR_GPR1_CM4_INIT_VTOR_HIGH_SHIFT	0x0
+
+/* CM4_INIT_VTOR_HIGH - CM4 Vector table offset value higher bits out of reset */
+#define IOMUXC_LPSR_GPR_GPR1_CM4_INIT_VTOR_HIGH(x)	(((u32)(((u32)(x)) << \
+							IOMUXC_LPSR_GPR_GPR1_CM4_INIT_VTOR_HIGH_SHIFT)) & \
+							IOMUXC_LPSR_GPR_GPR1_CM4_INIT_VTOR_HIGH_MASK)
+
+static int imxrt1170_rproc_start(struct imx_rproc *rproc, u64 boot_addr)
+{
+	u32 low_addr = IOMUXC_LPSR_GPR_GPR0_CM4_INIT_VTOR_LOW(boot_addr >> 3);
+	u32 high_addr = IOMUXC_LPSR_GPR_GPR1_CM4_INIT_VTOR_HIGH(boot_addr >> 16);
+
+	regmap_write(rproc->imxrt1170_lpsr_gpr, IMXRT1170_IOMUXC_LPSR_GPR0, low_addr);
+	regmap_write(rproc->imxrt1170_lpsr_gpr, IMXRT1170_IOMUXC_LPSR_GPR1, high_addr);
+	regmap_set_bits(rproc->regmap, IMXRT1170_SRC_SCR, SRC_SCR_BT_RELEASE_M4); /* release the M4 core from reset */
+
+	return 0;
+}
 
 static int imx_rproc_start(struct rproc *rproc)
 {
@@ -468,6 +517,9 @@ static int imx_rproc_start(struct rproc *rproc)
 						 dcfg->src_mask,
 						 dcfg->src_start);
 		}
+		break;
+	case IMX_RPROC_MMIO_IMXRT1170:
+		ret = imxrt1170_rproc_start(priv, rproc->bootaddr);
 		break;
 	case IMX_RPROC_SMC:
 		ret = clk_prepare_enable(priv->clk_audio);
@@ -561,6 +613,7 @@ static int imx_rproc_stop(struct rproc *rproc)
 		else
 			ret = scmi_imx_cpu_stop(priv->cpuid);
 		break;
+	case IMX_RPROC_MMIO_IMXRT1170: /* Stop not allowed on IMXRT1170 */
 	default:
 		return -EOPNOTSUPP;
 	}
@@ -594,7 +647,7 @@ static int imx_rproc_da_to_sys(struct imx_rproc *priv, u64 da,
 				continue;
 		}
 
-		if (da >= att->da && da + len < att->da + att->size) {
+		if (da >= att->da && da + len <= att->da + att->size) {
 			unsigned int offset = da - att->da;
 
 			*sys = att->sa + offset;
@@ -627,7 +680,7 @@ static void *imx_rproc_da_to_va(struct rproc *rproc, u64 da, size_t len, bool *i
 		return NULL;
 
 	for (i = 0; i < IMX_RPROC_MEM_MAX; i++) {
-		if (sys >= priv->mem[i].sys_addr && sys + len <
+		if (sys >= priv->mem[i].sys_addr && sys + len <=
 		    priv->mem[i].sys_addr +  priv->mem[i].size) {
 			unsigned int offset = sys - priv->mem[i].sys_addr;
 			/* __force to make sparse happy with type conversion */
@@ -852,11 +905,13 @@ static u64 imx_rproc_get_boot_addr(struct rproc *rproc, const struct firmware *f
 	u32 elf_shdr_get_size = elf_size_of_shdr(class);
 	u16 shstrndx = elf_hdr_get_e_shstrndx(class, ehdr);
 	u64 sh_addr;
+	bool is_iomem;
 
 	if (!of_device_is_compatible(dev->of_node, "fsl,imx93-cm33") &&
 	    !of_device_is_compatible(dev->of_node, "fsl,imx95-cm7") &&
 	    !of_device_is_compatible(dev->of_node, "fsl,imx94-cm7") &&
-	    !of_device_is_compatible(dev->of_node, "fsl,imx94-cm33s"))
+	    !of_device_is_compatible(dev->of_node, "fsl,imx94-cm33s") &&
+	    !of_device_is_compatible(dev->of_node, "fsl,imxrt1170-cm4"))
 		return rproc_elf_get_boot_addr(rproc, fw);
 
 	/* First, get the section header according to the elf class */
@@ -871,6 +926,9 @@ static u64 imx_rproc_get_boot_addr(struct rproc *rproc, const struct firmware *f
 
 		if (!strcmp(name_interrupts + name, ".interrupts")) {
 			sh_addr = elf_shdr_get_sh_addr(class, shdr);
+			if (of_device_is_compatible(dev->of_node, "fsl,imxrt1170-cm4")) {
+				imx_rproc_da_to_sys(priv, sh_addr, 1, &sh_addr, &is_iomem);
+			}
 			return sh_addr;
 		}
 	}
@@ -1114,6 +1172,7 @@ static int imx_rproc_attach_pd(struct imx_rproc *priv)
 static int imx_rproc_detect_mode(struct imx_rproc *priv)
 {
 	struct regmap_config config = { .name = "imx-rproc" };
+	struct regmap_config config_imxrt1170 = { .name = "imx-rproc-imxrt1170" };
 	const struct imx_rproc_dcfg *dcfg = priv->dcfg;
 	struct device *dev = priv->dev;
 	struct scmi_imx_lmm_info info;
@@ -1269,8 +1328,24 @@ static int imx_rproc_detect_mode(struct imx_rproc *priv)
 		return ret;
 	}
 
-	if ((val & dcfg->src_mask) != dcfg->src_stop)
-		priv->rproc->state = RPROC_DETACHED;
+	if (dcfg->method != IMX_RPROC_MMIO_IMXRT1170) {
+		if ((val & dcfg->src_mask) != dcfg->src_stop)
+			priv->rproc->state = RPROC_DETACHED;
+	} else {
+		regmap = syscon_regmap_lookup_by_phandle(dev->of_node, "lpsr_gpr");
+		if (IS_ERR(regmap)) {
+			dev_err(dev, "failed to find syscon1\n");
+			return PTR_ERR(regmap);
+		}
+
+		priv->imxrt1170_lpsr_gpr = regmap;
+		regmap_attach_dev(dev, regmap, &config_imxrt1170);
+		ret = regmap_read(regmap, 0x0, &val);
+		if (ret) {
+			dev_err(dev, "Failed to read src\n");
+			return ret;
+		}
+	}
 
 	return 0;
 }
@@ -1461,6 +1536,7 @@ static const struct of_device_id imx_rproc_of_match[] = {
 	{ .compatible = "fsl,imx95-cm7", .data = &imx_rproc_cfg_imx95_m7 },
 	{ .compatible = "fsl,imx94-cm7", .data = &imx_rproc_cfg_imx94_m7 },
 	{ .compatible = "fsl,imx94-cm33s", .data = &imx_rproc_cfg_imx94_m33s },
+	{ .compatible = "fsl,imxrt1170-cm4", .data = &imx_rproc_cfg_imxrt1170 },
 	{},
 };
 MODULE_DEVICE_TABLE(of, imx_rproc_of_match);
