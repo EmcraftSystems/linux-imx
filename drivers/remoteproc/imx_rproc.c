@@ -483,16 +483,31 @@ static const struct imx_rproc_dcfg imx_rproc_cfg_imxrt1170 = {
 							IOMUXC_LPSR_GPR_GPR1_CM4_INIT_VTOR_HIGH_SHIFT)) & \
 							IOMUXC_LPSR_GPR_GPR1_CM4_INIT_VTOR_HIGH_MASK)
 
-static int imxrt1170_rproc_start(struct imx_rproc *rproc, u64 boot_addr)
+static int imx_rproc_da_to_sys(struct imx_rproc *priv, u64 da,
+			       size_t len, u64 *sys, bool *is_iomem);
+
+static int imxrt1170_rproc_start(struct imx_rproc *rproc, u64 da)
 {
-	u32 low_addr = IOMUXC_LPSR_GPR_GPR0_CM4_INIT_VTOR_LOW(boot_addr >> 3);
-	u32 high_addr = IOMUXC_LPSR_GPR_GPR1_CM4_INIT_VTOR_HIGH(boot_addr >> 16);
+	u32 low_addr, high_addr;
+	u64 boot_addr;
+	int ret;
 
-	regmap_write(rproc->imxrt1170_lpsr_gpr, IMXRT1170_IOMUXC_LPSR_GPR0, low_addr);
-	regmap_write(rproc->imxrt1170_lpsr_gpr, IMXRT1170_IOMUXC_LPSR_GPR1, high_addr);
-	regmap_set_bits(rproc->regmap, IMXRT1170_SRC_SCR, SRC_SCR_BT_RELEASE_M4); /* release the M4 core from reset */
+	ret = imx_rproc_da_to_sys(rproc, da, 1, &boot_addr, NULL);
+	if (ret)
+		return ret;
 
-	return 0;
+	low_addr = IOMUXC_LPSR_GPR_GPR0_CM4_INIT_VTOR_LOW(boot_addr >> 3);
+	high_addr = IOMUXC_LPSR_GPR_GPR1_CM4_INIT_VTOR_HIGH(boot_addr >> 16);
+
+	ret = regmap_write(rproc->imxrt1170_lpsr_gpr, IMXRT1170_IOMUXC_LPSR_GPR0, low_addr);
+	if (ret)
+		return ret;
+
+	ret = regmap_write(rproc->imxrt1170_lpsr_gpr, IMXRT1170_IOMUXC_LPSR_GPR1, high_addr);
+	if (ret)
+		return ret;
+
+	return regmap_set_bits(rproc->regmap, IMXRT1170_SRC_SCR, SRC_SCR_BT_RELEASE_M4);
 }
 
 static int imx_rproc_start(struct rproc *rproc)
@@ -905,7 +920,6 @@ static u64 imx_rproc_get_boot_addr(struct rproc *rproc, const struct firmware *f
 	u32 elf_shdr_get_size = elf_size_of_shdr(class);
 	u16 shstrndx = elf_hdr_get_e_shstrndx(class, ehdr);
 	u64 sh_addr;
-	bool is_iomem;
 
 	if (!of_device_is_compatible(dev->of_node, "fsl,imx93-cm33") &&
 	    !of_device_is_compatible(dev->of_node, "fsl,imx95-cm7") &&
@@ -926,9 +940,6 @@ static u64 imx_rproc_get_boot_addr(struct rproc *rproc, const struct firmware *f
 
 		if (!strcmp(name_interrupts + name, ".interrupts")) {
 			sh_addr = elf_shdr_get_sh_addr(class, shdr);
-			if (of_device_is_compatible(dev->of_node, "fsl,imxrt1170-cm4")) {
-				imx_rproc_da_to_sys(priv, sh_addr, 1, &sh_addr, &is_iomem);
-			}
 			return sh_addr;
 		}
 	}
@@ -1332,7 +1343,9 @@ static int imx_rproc_detect_mode(struct imx_rproc *priv)
 		if ((val & dcfg->src_mask) != dcfg->src_stop)
 			priv->rproc->state = RPROC_DETACHED;
 	} else {
-		regmap = syscon_regmap_lookup_by_phandle(dev->of_node, "lpsr_gpr");
+		regmap = syscon_regmap_lookup_by_phandle(dev->of_node, "fsl,lpsr-gpr");
+		if (PTR_ERR_OR_ZERO(regmap) == -ENODEV)
+			regmap = syscon_regmap_lookup_by_phandle(dev->of_node, "lpsr_gpr");
 		if (IS_ERR(regmap)) {
 			dev_err(dev, "failed to find syscon1\n");
 			return PTR_ERR(regmap);
