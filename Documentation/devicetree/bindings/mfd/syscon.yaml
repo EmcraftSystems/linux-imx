@@ -63,6 +63,7 @@ select:
           - freecom,fsg-cs2-system-controller
           - fsl,imx93-aonmix-ns-syscfg
           - fsl,imx93-wakeupmix-syscfg
+          - fsl,imxrt1170-src
           - fsl,ls1088a-reset
           - fsl,vf610-anatop
           - fsl,vf610-mscm-cpucfg
@@ -160,6 +161,7 @@ properties:
           - freecom,fsg-cs2-system-controller
           - fsl,imx93-aonmix-ns-syscfg
           - fsl,imx93-wakeupmix-syscfg
+          - fsl,imxrt1170-src
           - fsl,ls1088a-reset
           - fsl,vf610-anatop
           - fsl,vf610-mscm-cpucfg

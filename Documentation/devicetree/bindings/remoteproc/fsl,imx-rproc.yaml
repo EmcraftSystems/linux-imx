@@ -31,6 +31,7 @@ properties:
       - fsl,imx95-cm7
       - fsl,imx94-cm7
       - fsl,imx94-cm33s
+      - fsl,imxrt1170-cm4
 
   clocks:
     maxItems: 1
@@ -87,6 +88,16 @@ properties:
       This property is to specify the resource id of the remote processor in SoC
       which supports SCFW
 
+  fsl,lpsr-gpr:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description:
+      Phandle to the IOMUXC LPSR GPR block, whose GPR0 and GPR1 hold the CM4
+      boot vector address.
+
+  fsl,startup-delay-ms:
+    description:
+      Time to wait after starting the remote processor, in milliseconds.
+
 required:
   - compatible
 
@@ -116,6 +127,19 @@ allOf:
     else:
       properties:
         power-domains: false
+
+  - if:
+      properties:
+        compatible:
+          contains:
+            const: fsl,imxrt1170-cm4
+    then:
+      required:
+        - syscon
+        - fsl,lpsr-gpr
+    else:
+      properties:
+        fsl,lpsr-gpr: false
 
 additionalProperties: false
 
@@ -149,5 +173,21 @@ examples:
                 &mu 3 1>;
       memory-region = <&vdev0buffer>, <&vdev0vring0>, <&vdev0vring1>, <&rsc_table>;
       syscon = <&src>;
+    };
+
+  - |
+    #include <dt-bindings/clock/imxrt1170-clock.h>
+
+    imxrt1170-cm4 {
+      compatible = "fsl,imxrt1170-cm4";
+      clocks = <&clks IMXRT1170_CLK_M4>;
+      mbox-names = "tx", "rx", "rxdb";
+      mboxes = <&mu 0 1
+                &mu 1 1
+                &mu 3 1>;
+      memory-region = <&vdev0buffer>, <&vdev0vring0>, <&vdev0vring1>, <&rsc_table>;
+      syscon = <&src>;
+      fsl,lpsr-gpr = <&lpsr_gpr>;
+      fsl,startup-delay-ms = <1000>;
     };
 ...

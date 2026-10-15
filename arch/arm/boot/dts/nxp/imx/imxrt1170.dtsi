@@ -497,10 +497,9 @@
 			#mbox-cells = <2>;
 		};
 
-		src: reset-controller@40c04000 {
-			compatible = "syscon";
+		src: syscon@40c04000 {
+			compatible = "fsl,imxrt1170-src", "syscon";
 			reg = <0x40c04000 0x4000>;
-			#reset-cells = <1>;
 		};
 
 		flexcan1: can@400c4000 {
