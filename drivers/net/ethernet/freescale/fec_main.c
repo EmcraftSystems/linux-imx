@@ -54,6 +54,7 @@
 #include <linux/platform_device.h>
 #include <linux/property.h>
 #include <linux/mdio.h>
+#include <linux/micrel_phy.h>
 #include <linux/phy.h>
 #include <linux/fec.h>
 #include <linux/of.h>
@@ -2542,6 +2543,58 @@ static int fec_enet_mii_probe(struct net_device *ndev)
 	return 0;
 }
 
+/*
+ * A board whose ENET_REF_CLK pad needs other settings for a KSZ8081 than for
+ * its other PHYs gives the FEC a "ksz8081" pinctrl state. Use it in place of
+ * "default" when the PHY found on the bus is a KSZ8081.
+ */
+static void fec_enet_pinctrl_by_phy(struct platform_device *pdev)
+{
+	struct net_device *ndev = platform_get_drvdata(pdev);
+	struct fec_enet_private *fep = netdev_priv(ndev);
+	struct phy_device *phy_dev;
+	struct pinctrl_state *state;
+	struct pinctrl *pinctrl;
+	u32 phy_id;
+
+	if (!fep->phy_node)
+		return;
+
+	phy_dev = of_phy_find_device(fep->phy_node);
+	if (!phy_dev)
+		return;
+	phy_id = phy_dev->phy_id;
+	put_device(&phy_dev->mdio.dev);
+
+	if ((phy_id & MICREL_PHY_ID_MASK) != PHY_ID_KSZ8081)
+		return;
+
+	pinctrl = devm_pinctrl_get(&pdev->dev);
+	if (IS_ERR(pinctrl))
+		return;
+
+	state = pinctrl_lookup_state(pinctrl, "ksz8081");
+	if (IS_ERR(state))
+		return;
+
+	if (pinctrl_select_state(pinctrl, state)) {
+		dev_warn(&pdev->dev, "failed to select \"ksz8081\" pinctrl state\n");
+		return;
+	}
+
+	fep->pinctrl = pinctrl;
+	fep->pinctrl_ksz8081 = state;
+	dev_info(&pdev->dev, "using \"ksz8081\" pinctrl state\n");
+}
+
+static void fec_enet_pinctrl_select_default(struct fec_enet_private *fep)
+{
+	if (fep->pinctrl_ksz8081)
+		pinctrl_select_state(fep->pinctrl, fep->pinctrl_ksz8081);
+	else
+		pinctrl_pm_select_default_state(&fep->pdev->dev);
+}
+
 static int fec_enet_mii_init(struct platform_device *pdev)
 {
 	static struct mii_bus *fec0_mii_bus;
@@ -3570,7 +3623,7 @@ fec_enet_open(struct net_device *ndev)
 	if (ret < 0)
 		return ret;
 
-	pinctrl_pm_select_default_state(&fep->pdev->dev);
+	fec_enet_pinctrl_select_default(fep);
 	ret = fec_enet_clk_enable(ndev, true);
 	if (ret)
 		goto clk_enable;
@@ -4643,6 +4696,8 @@ fec_probe(struct platform_device *pdev)
 	if (ret)
 		goto failed_mii_init;
 
+	fec_enet_pinctrl_by_phy(pdev);
+
 	/* Carrier starts down, phylib will bring it up */
 	netif_carrier_off(ndev);
 	fec_enet_clk_enable(ndev, false);
@@ -4831,7 +4886,7 @@ static int fec_resume(struct device *dev)
 			writel(val, fep->hwp + FEC_ECNTRL);
 			fep->wol_flag &= ~FEC_WOL_FLAG_SLEEP_ON;
 		} else {
-			pinctrl_pm_select_default_state(&fep->pdev->dev);
+			fec_enet_pinctrl_select_default(fep);
 		}
 		fec_restart(ndev);
 		netif_tx_lock_bh(ndev);
@@ -4841,7 +4896,7 @@ static int fec_resume(struct device *dev)
 		phy_init_hw(ndev->phydev);
 		phy_start(ndev->phydev);
 	} else if (fep->mii_bus_share && !ndev->phydev) {
-		pinctrl_pm_select_default_state(&fep->pdev->dev);
+		fec_enet_pinctrl_select_default(fep);
 		/* And then recovery mii bus */
 		ret = fec_restore_mii_bus(ndev);
 		if (ret < 0)

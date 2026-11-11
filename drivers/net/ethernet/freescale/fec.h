@@ -631,6 +631,8 @@ struct fec_enet_private {
 	uint	phy_speed;
 	phy_interface_t	phy_interface;
 	struct device_node *phy_node;
+	struct pinctrl *pinctrl;
+	struct pinctrl_state *pinctrl_ksz8081;
 	bool	rgmii_txc_dly;
 	bool	rgmii_rxc_dly;
 	bool	rpm_active;
