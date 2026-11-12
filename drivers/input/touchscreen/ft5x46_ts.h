@@ -1,7 +1,7 @@
 #ifndef __LINUX_FT5X0X_TS_H__
 #define __LINUX_FT5X0X_TS_H__
 
-/* -- dirver configure -- */
+/* -- driver configure -- */
 #define CFG_MAX_TOUCH_POINTS	10
 
 #define PRESS_MAX	0xFF

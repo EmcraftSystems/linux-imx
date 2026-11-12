@@ -136,7 +136,7 @@
 			assigned-clock-rates = <24000000>;
 		};
 
-		edma0: dma-controller@40080000 {
+		edma0: dma-controller@40070000 {
 			#dma-cells = <2>;
 			compatible = "fsl,imxrt1170-edma";
 			reg = <0x40070000 0x4000>,
@@ -375,7 +375,7 @@
 			clocks = <&clks IMXRT1170_CLK_USB>;
 		};
 
-		usbotg2: usb2@4042c0000 {
+		usbotg2: usb2@4042c000 {
 			compatible = "fsl,imxrt-usb", "fsl,imx6ul-usb";
 			reg = <0x4042c000 0x200>;
 			interrupts = <135>;
