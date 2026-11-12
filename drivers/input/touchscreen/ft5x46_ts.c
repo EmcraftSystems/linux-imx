@@ -381,7 +381,7 @@ static int ft5x0x_ts_probe(struct i2c_client *client)
 		    ft5x0x_ts->
 		    reset_gpio ? PTR_ERR(ft5x0x_ts->reset_gpio) : -EINVAL;
 		ft5x0x_ts->reset_gpio = NULL;
-		dev_warn(&client->dev, "Operating withoug nReset pin (%d)\n",
+		dev_warn(&client->dev, "Operating without nReset pin (%d)\n",
 			 err);
 	}
 

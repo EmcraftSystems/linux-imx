@@ -254,7 +254,7 @@ void ft_rw_iic_drv_exit(void)
 	device_destroy(fts_class, MKDEV(ft_rw_iic_drv_major, 0));
 	/*delete class created by us */
 	class_destroy(fts_class);
-	/*delet the cdev */
+	/*delete the cdev */
 	cdev_del(&ft_rw_i2c_dev_tt->cdev);
 	kfree(ft_rw_i2c_dev_tt);
 	unregister_chrdev_region(MKDEV(ft_rw_iic_drv_major, 0), 1);
